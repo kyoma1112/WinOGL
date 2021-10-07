@@ -64,11 +64,14 @@ void CWinOGLView::OnDraw(CDC* pDC)
 	glClear(GL_COLOR_BUFFER_BIT  | GL_DEPTH_BUFFER_BIT
 	);
 
+	/*
 	glColor3f(1.0, 1.0, 1.0);
 	glPointSize(5);
 	glBegin(GL_POINTS);
 	glVertex2f(ClickX, ClickY);
 	glEnd();
+	*/
+	AC.Draw();
 
 	glFlush();
 	SwapBuffers(pDC->m_hDC);
@@ -112,6 +115,7 @@ void CWinOGLView::OnLButtonDown(UINT nFlags, CPoint point)
 	ClickX = ClickX * 2 - 1; //Xワールド座標系
 	ClickY = ClickY * 2 - 1; //Yワールド座標系
 	double hi;
+	
 	if (rect.Width() > rect.Height()) {     //画面サイズに合わせてX,Yを調整
 		hi = (double)rect.Width() / rect.Height();
 		ClickX = ClickX * hi;
@@ -120,6 +124,9 @@ void CWinOGLView::OnLButtonDown(UINT nFlags, CPoint point)
 		hi = (double)rect.Height() / rect.Width();
 		ClickY = ClickY * hi;
 	}
+	
+
+	AC.AppendVertex(ClickX, ClickY);
 
 
 	RedrawWindow();

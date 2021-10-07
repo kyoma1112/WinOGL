@@ -3,7 +3,7 @@
 //
 #include <gl/GL.h>
 #pragma once
-
+#include "AdminControl.h"
 
 class CWinOGLView : public CView
 {
@@ -46,6 +46,7 @@ public:
 	afx_msg void OnDestroy();
 	afx_msg BOOL OnEraseBkgnd(CDC* pDC);
 	afx_msg void OnSize(UINT nType, int cx, int cy);
+	CAdminControl AC;
 };
 
 #ifndef _DEBUG  // WinOGLView.cpp のデバッグ バージョン
