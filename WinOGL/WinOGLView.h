@@ -1,7 +1,7 @@
 ﻿
 // WinOGLView.h : CWinOGLView クラスのインターフェイス
 //
-
+#include <gl/GL.h>
 #pragma once
 
 
@@ -14,7 +14,7 @@ protected: // シリアル化からのみ作成します。
 // 属性
 public:
 	CWinOGLDoc* GetDocument() const;
-
+	double ClickX, ClickY;
 // 操作
 public:
 
@@ -39,6 +39,13 @@ protected:
 	DECLARE_MESSAGE_MAP()
 public:
 	afx_msg void OnLButtonDown(UINT nFlags, CPoint point);
+private:
+	HGLRC m_hRC;
+public:
+	afx_msg int OnCreate(LPCREATESTRUCT lpCreateStruct);
+	afx_msg void OnDestroy();
+	afx_msg BOOL OnEraseBkgnd(CDC* pDC);
+	afx_msg void OnSize(UINT nType, int cx, int cy);
 };
 
 #ifndef _DEBUG  // WinOGLView.cpp のデバッグ バージョン
