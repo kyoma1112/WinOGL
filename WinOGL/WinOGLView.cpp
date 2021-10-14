@@ -126,7 +126,7 @@ void CWinOGLView::OnLButtonDown(UINT nFlags, CPoint point)
 	}
 	
 
-	AC.AppendVertex(ClickX, ClickY);
+	AC.CreateShape(ClickX, ClickY);
 
 
 	RedrawWindow();

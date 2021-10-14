@@ -1,6 +1,8 @@
 #pragma once
 #include <gl/GL.h>
 #include "Vertex.h"
+#include "pch.h"
+#include "Shape.h"
 
 class CAdminControl
 {
@@ -11,10 +13,11 @@ public:
 
 	void Draw();
 
-	CVertex* AppendVertex(float x, float y);
+	void AppendShape();
+	float Distance(CVertex* s, float x, float y);
+	void CreateShape(float x, float y);
 	
-	CVertex CV;
 private:
-	CVertex* vertex_head = NULL;
+	CShape* shape_head = NULL;
 };
 

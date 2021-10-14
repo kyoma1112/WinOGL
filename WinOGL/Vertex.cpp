@@ -11,6 +11,7 @@ CVertex::CVertex()
 CVertex::CVertex(float new_x, float new_y)
 {
 	SetXY(new_x, new_y);
+	next_vertex = NULL;
 }
 
 CVertex::CVertex(float new_x, float new_y, CVertex* new_next)
