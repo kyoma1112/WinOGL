@@ -73,45 +73,25 @@ int CShape::CountVertex()
 	return c;
 }
 
-boolean CShape::cross(CVertex* Be) {
+boolean CShape::Cross(CVertex* Be) {
 	CVertex* As = vertex_head;
 	CVertex* Ae = As->GetNext();
 	CVertex* Bs = Ae->GetNext();
-
-	CVertex a, b, a1, b1, a2, b2;
-	float ca1, ca2, cb1, cb2;
 
 	while (Bs->GetNext() != Be) 
 	{
 		Bs = Bs->GetNext();
 	}
+
+	if (As->GetX() == Be->GetX() && As->GetY() == Be->GetY())  //始点と終点が同じ場合
+	{
+		As = Ae;
+		Ae = Ae->GetNext();
+	}
 	
-	while (Ae->GetNext() != Be) {
-		//a
-		a.SetX(Ae->GetX() - As->GetX());
-		a.SetY(Ae->GetY() - As->GetY());
-		//b
-		b.SetX(Be->GetX() - Bs->GetX());
-		b.SetY(Be->GetY() - Bs->GetY());
-		//a1
-		a1.SetX(Bs->GetX() - As->GetX());
-		a1.SetY(Bs->GetY() - As->GetY());
-		//b1
-		b1.SetX(As->GetX() - Bs->GetX());
-		b1.SetY(As->GetY() - Bs->GetY());
-		//a2
-		a2.SetX(Be->GetX() - As->GetX());
-		a2.SetY(Be->GetY() - As->GetY());
-		//b2
-		b2.SetX(Ae->GetX() - Bs->GetX());
-		b2.SetY(Ae->GetY() - Bs->GetY());
+	while (Ae != Bs) {
 
-		ca1 = a.GetX() * a1.GetY() - a1.GetX() * a.GetY();
-		ca2 = a.GetX() * a2.GetY() - a2.GetX() * a.GetY();
-		cb1 = b.GetX() * b1.GetY() - b1.GetX() * b.GetY();
-		cb2 = b.GetX() * b2.GetY() - b2.GetX() * b.GetY();
-
-		if (ca1 * ca2 <= 0 && cb1 * cb2 <= 0) {
+		if (CrossCalc(As, Ae, Bs, Be)) {
 			return true;
 		}
 
@@ -119,5 +99,75 @@ boolean CShape::cross(CVertex* Be) {
 		Ae = Ae->GetNext();
 	}
 	
+	return false;
+}
+
+boolean CShape::OtherCross(CVertex* Be, CShape* shape_head) {
+	CShape* nowS = shape_head;
+	CVertex* As;
+	CVertex* Ae;
+	CVertex* Bs = vertex_head;
+
+	if (nowS->GetNextShape() != NULL) {
+		nowS = nowS->GetNextShape();
+	}
+	else {
+		return false;
+	}
+	
+	while (Bs->GetNext() != Be) {
+		Bs = Bs->GetNext();
+	}
+	while (nowS != NULL) {
+		As = nowS->GetV();
+		Ae = As->GetNext();
+		while (Ae != NULL) {
+			
+			if (CrossCalc(As, Ae, Bs, Be)) {
+				return true;
+			}
+
+			As = Ae;
+			Ae = Ae->GetNext();
+		}
+		
+		nowS = nowS->GetNextShape();
+	}
+
+	return false;
+}
+
+boolean CShape::CrossCalc(CVertex* As, CVertex* Ae, CVertex* Bs, CVertex* Be) {
+	CVertex a, b, a1, b1, a2, b2;
+	float ca1, ca2, cb1, cb2;
+
+	//a
+	a.SetX(Ae->GetX() - As->GetX());
+	a.SetY(Ae->GetY() - As->GetY());
+	//b
+	b.SetX(Be->GetX() - Bs->GetX());
+	b.SetY(Be->GetY() - Bs->GetY());
+	//a1
+	a1.SetX(Bs->GetX() - As->GetX());
+	a1.SetY(Bs->GetY() - As->GetY());
+	//b1
+	b1.SetX(As->GetX() - Bs->GetX());
+	b1.SetY(As->GetY() - Bs->GetY());
+	//a2
+	a2.SetX(Be->GetX() - As->GetX());
+	a2.SetY(Be->GetY() - As->GetY());
+	//b2
+	b2.SetX(Ae->GetX() - Bs->GetX());
+	b2.SetY(Ae->GetY() - Bs->GetY());
+
+	ca1 = a.GetX() * a1.GetY() - a1.GetX() * a.GetY();
+	ca2 = a.GetX() * a2.GetY() - a2.GetX() * a.GetY();
+	cb1 = b.GetX() * b1.GetY() - b1.GetX() * b.GetY();
+	cb2 = b.GetX() * b2.GetY() - b2.GetX() * b.GetY();
+
+	if (ca1 * ca2 <= 0 && cb1 * cb2 <= 0) {
+		return true;
+	}
+
 	return false;
 }

@@ -19,7 +19,9 @@ public:
 
 	CVertex* AppendVertex(float x, float y);
 	int CountVertex();
-	boolean CShape::cross(CVertex* Be);
+	boolean Cross(CVertex* Be);
+	boolean OtherCross(CVertex* Be, CShape* shape_head);
+	boolean CrossCalc(CVertex* As, CVertex* Ae, CVertex* Bs, CVertex* Be);
 
 private:
 	CShape* next_shape = NULL;
