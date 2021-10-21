@@ -69,14 +69,18 @@ void CAdminControl::CreateShape(float x, float y)
 		AppendShape();
 	}
 	if (shape_head->CountVertex() < 3) {
-
 		if (shape_head->CountVertex() == 0) {
-			shape_head->AppendVertex(x, y);
+			if (shape_head->inclusion(x, y, shape_head)) {
+				shape_head->AppendVertex(x, y);
+			}
 		}
-		else if(!shape_head->OtherCross(x, y, shape_head)){
-			shape_head->AppendVertex(x, y);
+		else{
+			if (!shape_head->OtherCross(x, y, shape_head)) {
+				shape_head->AppendVertex(x, y);
+			}
 		}
 	}
+
 	else if (Distance(shape_head->GetV(), x, y) <= 0.1) {
 		float vx = shape_head->GetV()->GetX();
 		float vy = shape_head->GetV()->GetY();

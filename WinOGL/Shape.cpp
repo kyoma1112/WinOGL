@@ -1,5 +1,8 @@
 #include "pch.h"
 #include "Shape.h"
+#include "math.h"
+
+#define pi 3.141592
 
 CShape::CShape() 
 {
@@ -101,7 +104,11 @@ boolean CShape::Cross(float mx, float my) {
 	return false;
 }
 
-boolean CShape::OtherCross(float mx, float my, CShape* shape_head) {
+
+
+
+boolean CShape::OtherCross(float mx, float my, CShape* shape_head)
+{
 	CShape* nowS = shape_head;
 	CVertex* As;
 	CVertex* Ae;
@@ -113,7 +120,7 @@ boolean CShape::OtherCross(float mx, float my, CShape* shape_head) {
 	else {
 		return false;
 	}
-	
+
 	while (Bs->GetNext() != NULL) {
 		Bs = Bs->GetNext();
 	}
@@ -122,7 +129,7 @@ boolean CShape::OtherCross(float mx, float my, CShape* shape_head) {
 		As = nowS->GetV();
 		Ae = As->GetNext();
 		while (Ae != NULL) {
-			
+
 			if (CrossCalc(As, Ae, Bs, mx, my)) {
 				return true;
 			}
@@ -130,14 +137,15 @@ boolean CShape::OtherCross(float mx, float my, CShape* shape_head) {
 			As = Ae;
 			Ae = Ae->GetNext();
 		}
-		
+
 		nowS = nowS->GetNextShape();
 	}
 
 	return false;
 }
 
-boolean CShape::CrossCalc(CVertex* As, CVertex* Ae, CVertex* Bs, float mx, float my) {
+boolean CShape::CrossCalc(CVertex* As, CVertex* Ae, CVertex* Bs, float mx, float my)
+{
 	CVertex a, b, a1, b1, a2, b2;
 	float ca1, ca2, cb1, cb2;
 
@@ -170,4 +178,51 @@ boolean CShape::CrossCalc(CVertex* As, CVertex* Ae, CVertex* Bs, float mx, float
 	}
 
 	return false;
+}
+
+//点の内包判定　trueなら外、falseなら内
+boolean CShape::inclusion(float x, float y, CShape* shape_head) {
+	CShape* nowS = shape_head;
+	CVertex* nowV;
+	CVertex* NextV;
+
+	float ax, ay, bx, by;
+	float sum, gaiseki, naiseki;
+
+	if (nowS->GetNextShape() != NULL) {
+		nowS = nowS->GetNextShape();
+	}
+	else {
+		return true;
+	}
+
+	while (nowS != NULL) {
+		nowV = nowS->GetV();
+		NextV = nowV->GetNext();
+		sum = 0;
+
+		while (NextV != NULL) {
+			ax = nowV->GetX() - x;
+			ay = nowV->GetY() - y;
+			bx = NextV->GetX() - x;
+			by = NextV->GetY() - y;
+
+			gaiseki = ax * by - bx * ay;
+			naiseki = ax * bx + ay * by;
+			float tan = atan2(gaiseki, naiseki);
+			sum = sum + tan;
+			
+			nowV = NextV;
+			NextV = NextV->GetNext();
+		}
+		if (sum < 0) {
+			sum *= -1;
+		}
+		if ((2 * pi - sum) < 0.0001 ) {
+			return false;
+		}
+		nowS = nowS->GetNextShape();
+	}
+
+	return true;
 }
