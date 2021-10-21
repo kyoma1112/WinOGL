@@ -69,50 +69,30 @@ void CAdminControl::CreateShape(float x, float y)
 		AppendShape();
 	}
 	if (shape_head->CountVertex() < 3) {
-		CVertex* newV = shape_head->AppendVertex(x, y);
 
-		//“ñ“_ˆÈã‚ ‚Á‚ÄŒð·‚µ‚Ä‚¢‚é‚Æ‚«(‘¼Œð·)
-		if (shape_head->CountVertex() >= 2 && shape_head->OtherCross(newV, shape_head)) {
-			CVertex* endV = shape_head->GetV();
-
-			while (endV->GetNext() != newV) {
-				endV = endV->GetNext();
-			}
-
-			endV->SetNext(NULL);
-			delete newV;
+		if (shape_head->CountVertex() == 0) {
+			shape_head->AppendVertex(x, y);
+		}
+		else if(!shape_head->OtherCross(x, y, shape_head)){
+			shape_head->AppendVertex(x, y);
 		}
 	}
 	else if (Distance(shape_head->GetV(), x, y) <= 0.1) {
-		CVertex* newV = shape_head->AppendVertex(shape_head->GetV()->GetX(), shape_head->GetV()->GetY());
+		float vx = shape_head->GetV()->GetX();
+		float vy = shape_head->GetV()->GetY();
 
-		if (shape_head->OtherCross(newV, shape_head) || (shape_head->Cross(newV))) {
-			CVertex* endV = shape_head->GetV();
-
-			while (endV->GetNext() != newV) {
-				endV = endV->GetNext();
-			}
-
-			endV->SetNext(NULL);
-			delete newV;
-		}
-		else {
+		if (!shape_head->OtherCross(vx, vy, shape_head) && !shape_head->Cross(vx, vy)) {
+			shape_head->AppendVertex(vx, vy);
 			AppendShape();
+		}
+		else if(!shape_head->OtherCross(x, y, shape_head) && !shape_head->Cross(x, y)){
+			shape_head->AppendVertex(x, y);
 		}
 	}
 	else {
-		CVertex* newV = shape_head->AppendVertex(x, y);
 		
-		//‘¼Œð·‚Ü‚½‚Í4“_ˆÈã‚ ‚Á‚ÄŽ©Œð·‚µ‚Ä‚é‚Æ‚«
-		if (shape_head->OtherCross(newV, shape_head) || (shape_head->Cross(newV))){
-			CVertex* endV = shape_head->GetV();
-
-			while (endV->GetNext() != newV) {
-				endV = endV->GetNext();
-			}
-
-			endV->SetNext(NULL);
-			delete newV;
+		if (!shape_head->OtherCross(x, y, shape_head) && !shape_head->Cross(x, y)){
+			shape_head->AppendVertex(x, y);
 		}
 	}
 }

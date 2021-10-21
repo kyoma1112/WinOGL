@@ -73,25 +73,24 @@ int CShape::CountVertex()
 	return c;
 }
 
-boolean CShape::Cross(CVertex* Be) {
+boolean CShape::Cross(float mx, float my) {
 	CVertex* As = vertex_head;
 	CVertex* Ae = As->GetNext();
 	CVertex* Bs = Ae->GetNext();
 
-	while (Bs->GetNext() != Be) 
+	while (Bs->GetNext() != NULL) 
 	{
 		Bs = Bs->GetNext();
 	}
 
-	if (As->GetX() == Be->GetX() && As->GetY() == Be->GetY())  //始点と終点が同じ場合
-	{
+	if (mx == vertex_head->GetX() && my == vertex_head->GetY()) {
 		As = Ae;
 		Ae = Ae->GetNext();
 	}
 	
 	while (Ae != Bs) {
 
-		if (CrossCalc(As, Ae, Bs, Be)) {
+		if (CrossCalc(As, Ae, Bs, mx, my)) {
 			return true;
 		}
 
@@ -102,7 +101,7 @@ boolean CShape::Cross(CVertex* Be) {
 	return false;
 }
 
-boolean CShape::OtherCross(CVertex* Be, CShape* shape_head) {
+boolean CShape::OtherCross(float mx, float my, CShape* shape_head) {
 	CShape* nowS = shape_head;
 	CVertex* As;
 	CVertex* Ae;
@@ -115,15 +114,16 @@ boolean CShape::OtherCross(CVertex* Be, CShape* shape_head) {
 		return false;
 	}
 	
-	while (Bs->GetNext() != Be) {
+	while (Bs->GetNext() != NULL) {
 		Bs = Bs->GetNext();
 	}
+
 	while (nowS != NULL) {
 		As = nowS->GetV();
 		Ae = As->GetNext();
 		while (Ae != NULL) {
 			
-			if (CrossCalc(As, Ae, Bs, Be)) {
+			if (CrossCalc(As, Ae, Bs, mx, my)) {
 				return true;
 			}
 
@@ -137,7 +137,7 @@ boolean CShape::OtherCross(CVertex* Be, CShape* shape_head) {
 	return false;
 }
 
-boolean CShape::CrossCalc(CVertex* As, CVertex* Ae, CVertex* Bs, CVertex* Be) {
+boolean CShape::CrossCalc(CVertex* As, CVertex* Ae, CVertex* Bs, float mx, float my) {
 	CVertex a, b, a1, b1, a2, b2;
 	float ca1, ca2, cb1, cb2;
 
@@ -145,8 +145,8 @@ boolean CShape::CrossCalc(CVertex* As, CVertex* Ae, CVertex* Bs, CVertex* Be) {
 	a.SetX(Ae->GetX() - As->GetX());
 	a.SetY(Ae->GetY() - As->GetY());
 	//b
-	b.SetX(Be->GetX() - Bs->GetX());
-	b.SetY(Be->GetY() - Bs->GetY());
+	b.SetX(mx - Bs->GetX());
+	b.SetY(my - Bs->GetY());
 	//a1
 	a1.SetX(Bs->GetX() - As->GetX());
 	a1.SetY(Bs->GetY() - As->GetY());
@@ -154,8 +154,8 @@ boolean CShape::CrossCalc(CVertex* As, CVertex* Ae, CVertex* Bs, CVertex* Be) {
 	b1.SetX(As->GetX() - Bs->GetX());
 	b1.SetY(As->GetY() - Bs->GetY());
 	//a2
-	a2.SetX(Be->GetX() - As->GetX());
-	a2.SetY(Be->GetY() - As->GetY());
+	a2.SetX(mx - As->GetX());
+	a2.SetY(my - As->GetY());
 	//b2
 	b2.SetX(Ae->GetX() - Bs->GetX());
 	b2.SetY(Ae->GetY() - Bs->GetY());
