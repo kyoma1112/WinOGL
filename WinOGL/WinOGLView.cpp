@@ -125,7 +125,6 @@ void CWinOGLView::OnLButtonDown(UINT nFlags, CPoint point)
 		ClickY = ClickY * hi;
 	}
 	
-
 	AC.CreateShape(ClickX, ClickY);
 
 

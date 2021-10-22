@@ -63,39 +63,252 @@ float CAdminControl::Distance(CVertex* s, float x, float y) {
 	return d;
 }
 
+//自交差判定　trueなら交差してない、falseなら交差している
+boolean CAdminControl::Cross(float mx, float my) {
+	CVertex* As = shape_head->GetV();
+	CVertex* Ae = As->GetNext();
+	CVertex* Bs = Ae->GetNext();
+
+	while (Bs->GetNext() != NULL)
+	{
+		Bs = Bs->GetNext();
+	}
+
+	if (mx == As->GetX() && my == As->GetY()) {
+		As = Ae;
+		Ae = Ae->GetNext();
+	}
+
+	while (Ae != Bs) {
+
+		if (CrossCalc(As, Ae, Bs, mx, my)) {
+			return false;
+		}
+
+		As = Ae;
+		Ae = Ae->GetNext();
+	}
+
+	return true;
+}
+
+//他交差判定　trueなら交差してない、falseなら交差している
+boolean CAdminControl::OtherCross(float mx, float my)
+{
+	CShape* nowS = shape_head;
+	CVertex* As;
+	CVertex* Ae;
+	CVertex* Bs = nowS->GetV();
+
+	if (nowS->GetNextShape() != NULL) {
+		nowS = nowS->GetNextShape();
+	}
+	else {
+		return true;
+	}
+
+	while (Bs->GetNext() != NULL) {
+		Bs = Bs->GetNext();
+	}
+
+	while (nowS != NULL) {
+		As = nowS->GetV();
+		Ae = As->GetNext();
+		while (Ae != NULL) {
+
+			if (CrossCalc(As, Ae, Bs, mx, my)) {
+				return false;
+			}
+
+			As = Ae;
+			Ae = Ae->GetNext();
+		}
+
+		nowS = nowS->GetNextShape();
+	}
+
+	return true;
+}
+
+//交差計算  trueなら交差してる、falseなら交差していない
+boolean CAdminControl::CrossCalc(CVertex* As, CVertex* Ae, CVertex* Bs, float mx, float my)
+{
+	CVertex a, b, a1, b1, a2, b2;
+	float ca1, ca2, cb1, cb2;
+
+	//a
+	a.SetX(Ae->GetX() - As->GetX());
+	a.SetY(Ae->GetY() - As->GetY());
+	//b
+	b.SetX(mx - Bs->GetX());
+	b.SetY(my - Bs->GetY());
+	//a1
+	a1.SetX(Bs->GetX() - As->GetX());
+	a1.SetY(Bs->GetY() - As->GetY());
+	//b1
+	b1.SetX(As->GetX() - Bs->GetX());
+	b1.SetY(As->GetY() - Bs->GetY());
+	//a2
+	a2.SetX(mx - As->GetX());
+	a2.SetY(my - As->GetY());
+	//b2
+	b2.SetX(Ae->GetX() - Bs->GetX());
+	b2.SetY(Ae->GetY() - Bs->GetY());
+
+	ca1 = a.GetX() * a1.GetY() - a1.GetX() * a.GetY();
+	ca2 = a.GetX() * a2.GetY() - a2.GetX() * a.GetY();
+	cb1 = b.GetX() * b1.GetY() - b1.GetX() * b.GetY();
+	cb2 = b.GetX() * b2.GetY() - b2.GetX() * b.GetY();
+
+	if (ca1 * ca2 <= 0 && cb1 * cb2 <= 0) {
+		return true;
+	}
+
+	return false;
+}
+
+//点の内包判定　trueなら外、falseなら内
+boolean CAdminControl::inclusion(float x, float y)
+{
+	CShape* nowS = shape_head;
+	CVertex* nowV;
+	CVertex* nextV;
+
+	float ax, ay, bx, by;
+	float sum, gaiseki, naiseki;
+
+	if (nowS->GetNextShape() != NULL) {
+		nowS = nowS->GetNextShape();
+	}
+	else {
+		return true;
+	}
+
+	while (nowS != NULL) {
+		nowV = nowS->GetV();
+		nextV = nowV->GetNext();
+		sum = 0;
+
+		while (nextV != NULL) {
+			ax = nowV->GetX() - x;
+			ay = nowV->GetY() - y;
+			bx = nextV->GetX() - x;
+			by = nextV->GetY() - y;
+
+			gaiseki = ax * by - bx * ay;
+			naiseki = ax * bx + ay * by;
+			float tan = atan2(gaiseki, naiseki);
+			sum = sum + tan;
+
+			nowV = nextV;
+			nextV = nextV->GetNext();
+		}
+		if (sum < 0) {
+			sum *= -1;
+		}
+		if ((2 * pi - sum) < 0.0001) {
+			return false;
+		}
+		nowS = nowS->GetNextShape();
+	}
+
+	return true;
+}
+
+//形状の内包判定 trueなら内包していない、falseなら内包している
+boolean CAdminControl::wrap()
+{
+	CShape* nowS = shape_head;
+	CVertex* nowSV;
+	CVertex* nowV;
+	CVertex* nextV;
+
+	float ax, ay, bx, by;
+	float naiseki, gaiseki, sum;
+
+	if (nowS->GetNextShape() != NULL) {
+		nowS = nowS->GetNextShape();
+	}
+	else {
+		return true;
+	}
+	
+	while (nowS != NULL) {
+		nowV = shape_head->GetV();
+		nextV = nowV->GetNext();
+		nowSV = nowS->GetV();
+		sum = 0;
+		while (nowV != NULL) {
+			ax = nowV->GetX() - nowSV->GetX();
+			ay = nowV->GetY() - nowSV->GetY();
+			bx = nextV->GetX() - nowSV->GetX();
+			by = nextV->GetY() - nowSV->GetY();
+
+			gaiseki = ax * by - bx * ay;
+			naiseki = ax * bx + ay * by;
+			float tan = atan2(gaiseki, naiseki);
+			sum = sum + tan;
+
+			nowV = nowV->GetNext();
+			nextV = nextV->GetNext();
+			if (nextV == NULL) {
+				nextV = shape_head->GetV();
+			}
+		}
+		if (sum < 0) {
+			sum *= -1;
+		}
+		if ((2 * pi - sum) < 0.0001) {
+			return false;
+		}
+		nowS = nowS->GetNextShape();
+	}
+
+	return true;
+}
+
 void CAdminControl::CreateShape(float x, float y)
 {
 	if (shape_head == NULL) {
 		AppendShape();
 	}
+
+	if (shape_head->CountVertex() >= 1) {
+		CVertex* endV = shape_head->GetV();
+		while (endV->GetNext() != NULL) {
+			endV = endV->GetNext();
+		}
+		if (endV->GetX() == x && endV->GetY() == y) {
+			return;
+		}
+	}
+
 	if (shape_head->CountVertex() < 3) {
 		if (shape_head->CountVertex() == 0) {
-			if (shape_head->inclusion(x, y, shape_head)) {
+			if (inclusion(x, y)) {
 				shape_head->AppendVertex(x, y);
 			}
 		}
-		else{
-			if (!shape_head->OtherCross(x, y, shape_head)) {
+		else {
+			if (OtherCross(x, y)) {
 				shape_head->AppendVertex(x, y);
 			}
 		}
 	}
-
 	else if (Distance(shape_head->GetV(), x, y) <= 0.1) {
 		float vx = shape_head->GetV()->GetX();
 		float vy = shape_head->GetV()->GetY();
 
-		if (!shape_head->OtherCross(vx, vy, shape_head) && !shape_head->Cross(vx, vy)) {
+		if (OtherCross(vx, vy) && Cross(vx, vy) && wrap()) {
 			shape_head->AppendVertex(vx, vy);
 			AppendShape();
 		}
-		else if(!shape_head->OtherCross(x, y, shape_head) && !shape_head->Cross(x, y)){
+		else if (OtherCross(x, y) && Cross(x, y)) {
 			shape_head->AppendVertex(x, y);
 		}
 	}
 	else {
-		
-		if (!shape_head->OtherCross(x, y, shape_head) && !shape_head->Cross(x, y)){
+		if (OtherCross(x, y) && Cross(x, y)) {
 			shape_head->AppendVertex(x, y);
 		}
 	}
