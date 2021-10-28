@@ -219,7 +219,7 @@ boolean CAdminControl::inclusion(float x, float y)
 boolean CAdminControl::wrap()
 {
 	CShape* nowS = shape_head;
-	CVertex* nowSV;
+	CVertex* nowSV;      //nowS(Œ`ó)‚ÌŽn“_
 	CVertex* nowV;
 	CVertex* nextV;
 
@@ -255,9 +255,8 @@ boolean CAdminControl::wrap()
 				nextV = shape_head->GetV();
 			}
 		}
-		if (sum < 0) {
-			sum *= -1;
-		}
+		sum = fabs(sum);
+
 		if ((2 * pi - sum) < 0.0001) {
 			return false;
 		}
@@ -296,14 +295,14 @@ void CAdminControl::CreateShape(float x, float y)
 		}
 	}
 	else if (Distance(shape_head->GetV(), x, y) <= 0.1) {
-		float vx = shape_head->GetV()->GetX();
-		float vy = shape_head->GetV()->GetY();
+		float sx = shape_head->GetV()->GetX();
+		float sy = shape_head->GetV()->GetY();
 
-		if (OtherCross(vx, vy) && Cross(vx, vy) && wrap()) {
-			shape_head->AppendVertex(vx, vy);
+		if (OtherCross(sx, sy) && Cross(sx, sy) && wrap()) {
+			shape_head->AppendVertex(sx, sy);
 			AppendShape();
 		}
-		else if (OtherCross(x, y) && Cross(x, y)) {
+		else if (x != sx && y != sy && OtherCross(x, y) && Cross(x, y)) {
 			shape_head->AppendVertex(x, y);
 		}
 	}
