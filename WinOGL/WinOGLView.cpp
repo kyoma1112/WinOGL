@@ -27,6 +27,10 @@ BEGIN_MESSAGE_MAP(CWinOGLView, CView)
 	ON_WM_DESTROY()
 	ON_WM_ERASEBKGND()
 	ON_WM_SIZE()
+	ON_WM_RBUTTONDOWN()
+	ON_WM_MOUSEMOVE()
+	ON_COMMAND(ID_CURSOR, &CWinOGLView::OnCursor)
+	ON_WM_LBUTTONUP()
 END_MESSAGE_MAP()
 
 // CWinOGLView コンストラクション/デストラクション
@@ -64,14 +68,15 @@ void CWinOGLView::OnDraw(CDC* pDC)
 	glClear(GL_COLOR_BUFFER_BIT  | GL_DEPTH_BUFFER_BIT
 	);
 
-	/*
-	glColor3f(1.0, 1.0, 1.0);
-	glPointSize(5);
-	glBegin(GL_POINTS);
-	glVertex2f(ClickX, ClickY);
-	glEnd();
-	*/
 	AC.Draw();
+
+	if (cursorMode) {
+		CRect rect;
+		GetClientRect(rect); // 描画領域の大きさを取得
+
+		AC.CursorDraw(rect);
+		InvalidateRect(0, false);
+	}
 
 	glFlush();
 	SwapBuffers(pDC->m_hDC);
@@ -108,6 +113,7 @@ void CWinOGLView::OnLButtonDown(UINT nFlags, CPoint point)
 	// TODO: ここにメッセージ ハンドラー コードを追加するか、既定の処理を呼び出します。
 	CRect rect;
 	GetClientRect(rect); // 描画領域の大きさを取得
+	lButton = true; //LButtonがクリックされていることを表すフラグ
 	
 	ClickX = (double)point.x / rect.Width(); //X正規化座標系
 	ClickY = (double)point.y / rect.Height();
@@ -127,10 +133,31 @@ void CWinOGLView::OnLButtonDown(UINT nFlags, CPoint point)
 	
 	AC.CreateShape(ClickX, ClickY);
 
-
 	RedrawWindow();
 
 	CView::OnLButtonDown(nFlags, point);
+}
+
+void CWinOGLView::OnLButtonUp(UINT nFlags, CPoint point)
+{
+	// TODO: ここにメッセージ ハンドラー コードを追加するか、既定の処理を呼び出します。
+	lButton = false;
+
+	CView::OnLButtonUp(nFlags, point);
+}
+
+void CWinOGLView::OnMouseMove(UINT nFlags, CPoint point)
+{
+	// TODO: ここにメッセージ ハンドラー コードを追加するか、既定の処理を呼び出します。
+
+	CView::OnMouseMove(nFlags, point);
+}
+
+void CWinOGLView::OnRButtonDown(UINT nFlags, CPoint point)
+{
+	// TODO: ここにメッセージ ハンドラー コードを追加するか、既定の処理を呼び出します。
+
+	CView::OnRButtonDown(nFlags, point);
 }
 
 
@@ -206,4 +233,18 @@ void CWinOGLView::OnSize(UINT nType, int cx, int cy)
 	glMatrixMode(GL_MODELVIEW);
 	RedrawWindow();
 	wglMakeCurrent(clientDC.m_hDC, NULL);
+}
+
+
+void CWinOGLView::OnCursor()
+{
+	// TODO: ここにコマンド ハンドラー コードを追加します。
+	if (cursorMode) {
+		cursorMode = false;
+	}
+	else {
+		cursorMode = true;
+	}
+
+	RedrawWindow();
 }

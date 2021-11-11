@@ -72,6 +72,3 @@ int CShape::CountVertex()
 
 	return c;
 }
-
-
-
