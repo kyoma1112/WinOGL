@@ -127,8 +127,9 @@ void CAdminControl::Draw()
 }
 
 //カーソルの表示
-void CAdminControl::DrawCursor(CRect rect) {
+void CAdminControl::DrawCursor(CRect rect, float x, float y) {
 	//マウスの位置の計算
+	/*
 	double mx, my, hi;
 	CPoint point;
 	GetCursorPos(&point);
@@ -148,12 +149,13 @@ void CAdminControl::DrawCursor(CRect rect) {
 		hi = (double)rect.Height() / rect.Width();
 		my = my * hi;
 	}
+	*/
 
 	//ウィンドウサイズの計算
 	double wx, wy;
 	wx = 1;
 	wy = 1;
-	if (rect.Width() > rect.Height()) {     
+	if (rect.Width() > rect.Height()) {
 		wx = (double)rect.Width() / rect.Height();
 	}
 	else {
@@ -164,10 +166,10 @@ void CAdminControl::DrawCursor(CRect rect) {
 	glColor3f(0.6, 0.8, 1.0);
 	glLineWidth(2);
 	glBegin(GL_LINES);
-	glVertex2f(mx, -1 * wy);
-	glVertex2f(mx, wy);
-	glVertex2f(-1 * wx, my);
-	glVertex2f(wx, my);
+	glVertex2f(x, -1 * wy);
+	glVertex2f(x, wy);
+	glVertex2f(-1 * wx, y);
+	glVertex2f(wx, y);
 	glEnd();
 }
 

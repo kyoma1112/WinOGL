@@ -79,7 +79,8 @@ void CWinOGLView::OnDraw(CDC* pDC)
 		CRect rect;
 		GetClientRect(rect); // 描画領域の大きさを取得
 
-		AC.DrawCursor(rect);
+		AC.DrawCursor(rect, NowX, NowY);
+		//InvalidateRect(0, false);
 	}
 
 	glFlush();
@@ -146,24 +147,6 @@ void CWinOGLView::OnLButtonDown(UINT nFlags, CPoint point)
 void CWinOGLView::OnLButtonUp(UINT nFlags, CPoint point)
 {
 	// TODO: ここにメッセージ ハンドラー コードを追加するか、既定の処理を呼び出します。
-	CRect rect;
-	GetClientRect(rect); // 描画領域の大きさを取得
-
-	ClickX = (double)point.x / rect.Width(); //X正規化座標系
-	ClickY = (double)point.y / rect.Height();
-	ClickY = (ClickY - 1) * -1; //Y正規化座標系
-	ClickX = ClickX * 2 - 1; //Xワールド座標系
-	ClickY = ClickY * 2 - 1; //Yワールド座標系
-	double hi;
-
-	if (rect.Width() > rect.Height()) {     //画面サイズに合わせてX,Yを調整
-		hi = (double)rect.Width() / rect.Height();
-		ClickX = ClickX * hi;
-	}
-	else {
-		hi = (double)rect.Height() / rect.Width();
-		ClickY = ClickY * hi;
-	}
 
 	if (AC.editMode) {
 		AC.SelectShape(ClickX, ClickY);
@@ -177,10 +160,27 @@ void CWinOGLView::OnLButtonUp(UINT nFlags, CPoint point)
 void CWinOGLView::OnMouseMove(UINT nFlags, CPoint point)
 {
 	// TODO: ここにメッセージ ハンドラー コードを追加するか、既定の処理を呼び出します。
-
 	if (AC.cursorMode) {
-		InvalidateRect(0, false);
+		CRect rect;
+		GetClientRect(rect); // 描画領域の大きさを取得
+
+		NowX = (double)point.x / rect.Width(); //X正規化座標系
+		NowY = (double)point.y / rect.Height();
+		NowY = (NowY - 1) * -1; //Y正規化座標系
+		NowX = NowX * 2 - 1; //Xワールド座標系
+		NowY = NowY * 2 - 1; //Yワールド座標系
+		double hi;
+
+		if (rect.Width() > rect.Height()) {     //画面サイズに合わせてX,Yを調整
+			hi = (double)rect.Width() / rect.Height();
+			NowX = NowX * hi;
+		}
+		else {
+			hi = (double)rect.Height() / rect.Width();
+			NowY = NowY * hi;
+		}
 	}
+
 
 	RedrawWindow();
 	CView::OnMouseMove(nFlags, point);

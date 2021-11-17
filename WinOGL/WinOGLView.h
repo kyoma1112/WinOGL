@@ -15,6 +15,7 @@ protected: // シリアル化からのみ作成します。
 public:
 	CWinOGLDoc* GetDocument() const;
 	double ClickX, ClickY;
+	double NowX = 0, NowY = 0;
 // 操作
 public:
 

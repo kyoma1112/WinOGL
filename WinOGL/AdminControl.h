@@ -25,7 +25,7 @@ public:
 	//面以外の表示
 	void Draw();
 	//カーソルの表示
-	void DrawCursor(CRect rect);
+	void DrawCursor(CRect rect, float x, float y);
 
 	//新しい形状の追加
 	void AppendShape();
@@ -68,6 +68,5 @@ private:
 	CVertex* control_point = NULL;
 	CVertex* control_edge = NULL;
 	CShape* control_shape = NULL;
-	
 };
 
