@@ -41,10 +41,7 @@ private:
 	HGLRC m_hRC;
 
 	CAdminControl AC;
-	//カーソルを表示するモード
-	bool cursorMode = false;
-	//LButtonがクリックされていることを表すフラグ
-	bool lButton = false;
+
 public:
 	afx_msg void OnLButtonDown(UINT nFlags, CPoint point);
 	afx_msg int OnCreate(LPCREATESTRUCT lpCreateStruct);
@@ -55,6 +52,10 @@ public:
 	afx_msg void OnMouseMove(UINT nFlags, CPoint point);
 	afx_msg void OnCursor();
 	afx_msg void OnLButtonUp(UINT nFlags, CPoint point);
+	afx_msg void OnEdit();
+	afx_msg void OnUpdateEdit(CCmdUI* pCmdUI);
+	afx_msg void OnUpdateCursor(CCmdUI* pCmdUI);
+	afx_msg void OnRButtonDblClk(UINT nFlags, CPoint point);
 };
 
 #ifndef _DEBUG  // WinOGLView.cpp のデバッグ バージョン

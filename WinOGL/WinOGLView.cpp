@@ -31,6 +31,10 @@ BEGIN_MESSAGE_MAP(CWinOGLView, CView)
 	ON_WM_MOUSEMOVE()
 	ON_COMMAND(ID_CURSOR, &CWinOGLView::OnCursor)
 	ON_WM_LBUTTONUP()
+	ON_COMMAND(ID_EDIT, &CWinOGLView::OnEdit)
+	ON_UPDATE_COMMAND_UI(ID_EDIT, &CWinOGLView::OnUpdateEdit)
+	ON_UPDATE_COMMAND_UI(ID_CURSOR, &CWinOGLView::OnUpdateCursor)
+	ON_WM_RBUTTONDBLCLK()
 END_MESSAGE_MAP()
 
 // CWinOGLView コンストラクション/デストラクション
@@ -70,12 +74,12 @@ void CWinOGLView::OnDraw(CDC* pDC)
 
 	AC.Draw();
 
-	if (cursorMode) {
+	//十字カーソルの表示
+	if (AC.cursorMode) {
 		CRect rect;
 		GetClientRect(rect); // 描画領域の大きさを取得
 
-		AC.CursorDraw(rect);
-		InvalidateRect(0, false);
+		AC.DrawCursor(rect);
 	}
 
 	glFlush();
@@ -113,7 +117,6 @@ void CWinOGLView::OnLButtonDown(UINT nFlags, CPoint point)
 	// TODO: ここにメッセージ ハンドラー コードを追加するか、既定の処理を呼び出します。
 	CRect rect;
 	GetClientRect(rect); // 描画領域の大きさを取得
-	lButton = true; //LButtonがクリックされていることを表すフラグ
 	
 	ClickX = (double)point.x / rect.Width(); //X正規化座標系
 	ClickY = (double)point.y / rect.Height();
@@ -130,8 +133,10 @@ void CWinOGLView::OnLButtonDown(UINT nFlags, CPoint point)
 		hi = (double)rect.Height() / rect.Width();
 		ClickY = ClickY * hi;
 	}
-	
-	AC.CreateShape(ClickX, ClickY);
+
+	if(!AC.editMode){
+		AC.CreateShape(ClickX, ClickY);
+	}
 
 	RedrawWindow();
 
@@ -141,7 +146,30 @@ void CWinOGLView::OnLButtonDown(UINT nFlags, CPoint point)
 void CWinOGLView::OnLButtonUp(UINT nFlags, CPoint point)
 {
 	// TODO: ここにメッセージ ハンドラー コードを追加するか、既定の処理を呼び出します。
-	lButton = false;
+	CRect rect;
+	GetClientRect(rect); // 描画領域の大きさを取得
+
+	ClickX = (double)point.x / rect.Width(); //X正規化座標系
+	ClickY = (double)point.y / rect.Height();
+	ClickY = (ClickY - 1) * -1; //Y正規化座標系
+	ClickX = ClickX * 2 - 1; //Xワールド座標系
+	ClickY = ClickY * 2 - 1; //Yワールド座標系
+	double hi;
+
+	if (rect.Width() > rect.Height()) {     //画面サイズに合わせてX,Yを調整
+		hi = (double)rect.Width() / rect.Height();
+		ClickX = ClickX * hi;
+	}
+	else {
+		hi = (double)rect.Height() / rect.Width();
+		ClickY = ClickY * hi;
+	}
+
+	if (AC.editMode) {
+		AC.SelectShape(ClickX, ClickY);
+	}
+
+	RedrawWindow();
 
 	CView::OnLButtonUp(nFlags, point);
 }
@@ -150,14 +178,31 @@ void CWinOGLView::OnMouseMove(UINT nFlags, CPoint point)
 {
 	// TODO: ここにメッセージ ハンドラー コードを追加するか、既定の処理を呼び出します。
 
+	if (AC.cursorMode) {
+		InvalidateRect(0, false);
+	}
+
+	RedrawWindow();
 	CView::OnMouseMove(nFlags, point);
 }
 
 void CWinOGLView::OnRButtonDown(UINT nFlags, CPoint point)
 {
 	// TODO: ここにメッセージ ハンドラー コードを追加するか、既定の処理を呼び出します。
+	if (AC.editMode) {
+		AC.DeletePoint(NULL);
+	}
 
+	RedrawWindow();
 	CView::OnRButtonDown(nFlags, point);
+}
+
+void CWinOGLView::OnRButtonDblClk(UINT nFlags, CPoint point)
+{
+	// TODO: ここにメッセージ ハンドラー コードを追加するか、既定の処理を呼び出します。
+
+	RedrawWindow();
+	CView::OnRButtonDblClk(nFlags, point);
 }
 
 
@@ -239,12 +284,50 @@ void CWinOGLView::OnSize(UINT nType, int cx, int cy)
 void CWinOGLView::OnCursor()
 {
 	// TODO: ここにコマンド ハンドラー コードを追加します。
-	if (cursorMode) {
-		cursorMode = false;
+	if (AC.cursorMode) {
+		AC.cursorMode = false;
 	}
 	else {
-		cursorMode = true;
+		AC.cursorMode = true;
 	}
 
 	RedrawWindow();
+}
+
+void CWinOGLView::OnUpdateCursor(CCmdUI* pCmdUI)
+{
+	// TODO:ここにコマンド更新 UI ハンドラー コードを追加します。
+	if (AC.cursorMode) {
+		pCmdUI->SetCheck(true);
+	}
+	else {
+		pCmdUI->SetCheck(false);
+	}
+}
+
+
+void CWinOGLView::OnEdit()
+{
+	// TODO: ここにコマンド ハンドラー コードを追加します。
+	if (AC.editMode) {
+		AC.InitSelect();
+		AC.editMode = false;
+		//AC.cursorMode = false;
+	}
+	else if(AC.CanSelect()){
+		AC.editMode = true;
+	}
+
+	RedrawWindow();
+}
+
+void CWinOGLView::OnUpdateEdit(CCmdUI* pCmdUI)
+{
+	// TODO:ここにコマンド更新 UI ハンドラー コードを追加します。
+	if (AC.editMode) {
+		pCmdUI->SetCheck(true);
+	}
+	else {
+		pCmdUI->SetCheck(false);
+	}
 }

@@ -11,8 +11,8 @@ CAdminControl::~CAdminControl()
 	shape_head->FreeShape();
 }
 
-/*面の表示を行う関数
-void CAdminControl::AreaDraw(CShape* printS) {
+//面の表示を行う関数
+void CAdminControl::DrawArea(CShape* printS) {
 	CVertex* nowV = printS->GetV();
 
 	//control_shapeの複製
@@ -22,42 +22,39 @@ void CAdminControl::AreaDraw(CShape* printS) {
 		nowV = nowV->GetNext();
 	}
 
-	CVertex* startV = copyShape->GetV();
-	CVertex* middleV = nowV->GetNext();
-	CVertex* endV = middleV->GetNext();
+	CVertex* v1 = copyShape->GetV();
+	CVertex* v2 = v1->GetNext();
+	CVertex* v3 = v2->GetNext();
+	float centerX, centerY;
 
-	//図形の頂点の配置方向が時計周りの場合
-	if (Direction(copyShape)) {
-		while (copyShape->CountVertex() >= 3) {
+	while (copyShape->CountVertex() >= 4) {
+		centerX = (v1->GetX() + v2->GetX() + v3->GetX()) / 3;
+		centerY = (v1->GetY() + v2->GetY() + v3->GetY()) / 3;
+		if (!Inclusion(copyShape, centerX, centerY) && TriangleInclusion(copyShape,v1, v2, v3)) {
 			glColor3f(0, 1.0, 0);
-			glPointSize(10);
 			glBegin(GL_TRIANGLES);
-
-			//三角形が時計回りの場合
-			if (TriangleDirection(startV, middleV, endV)) {
-				
-			}
-			else {
-				startV = middleV;
-				middleV = endV;
-				endV = endV->GetNext();
-				if (endV == NULL) {
-					endV = copyShape->GetV()->GetNext();
-				}
-			}
+			glVertex2f(v1->GetX(), v1->GetY());
+			glVertex2f(v2->GetX(), v2->GetY());
+			glVertex2f(v3->GetX(), v3->GetY());
 			glEnd();
+			DeleteTriangle(copyShape,v2);
 		}
-	}
-	//図形の頂点の配置方向が反時計周りの場合
-	else {
-	
+		else {
+			v1 = v2;
+		}
+
+		v2 = v3;
+		v3 = v3->GetNext();
+		if (v3->GetNext() == NULL) {
+			v3 = copyShape->GetV();
+		}
 	}
 
 	//複製した形状とその中の頂点の削除
 	copyShape->GetV()->FreeVertex();
+	copyShape->InitVHead();
 	copyShape->FreeShape();
 }
-*/
 
 //面以外の表示
 void CAdminControl::Draw()
@@ -66,6 +63,7 @@ void CAdminControl::Draw()
 	CVertex* nowV;
 	// TODO: ここに実装コードを追加します.
 	while (nowS != NULL) {
+		//頂点の表示
 		if (nowS == control_shape) {
 			glColor3f(0, 1.0, 0);
 		}
@@ -76,14 +74,13 @@ void CAdminControl::Draw()
 		glBegin(GL_POINTS);
 
 		nowV = nowS->GetV();
-
 		while (nowV != NULL) {
 			glVertex2f(nowV->GetX(), nowV->GetY());
 			nowV = nowV->GetNext();
 		}
-
 		glEnd();
 
+		//辺の表示
 		if (nowS == control_shape) {
 			glColor3f(0, 1.0, 0);
 		}
@@ -100,8 +97,10 @@ void CAdminControl::Draw()
 			nowV = nowV->GetNext();
 		}
 		glEnd();
+
 		nowS = nowS->GetNextShape();
 	}
+	//選択された頂点の表示
 	if (control_point != NULL) {
 		glColor3f(0, 1.0, 0);
 		glPointSize(10);
@@ -111,6 +110,7 @@ void CAdminControl::Draw()
 
 		glEnd();
 	}
+	//選択された辺の表示
 	if (control_edge != NULL) {
 		glColor3f(0, 1.0, 0);
 		glLineWidth(4);
@@ -127,7 +127,7 @@ void CAdminControl::Draw()
 }
 
 //カーソルの表示
-void CAdminControl::CursorDraw(CRect rect) {
+void CAdminControl::DrawCursor(CRect rect) {
 	//マウスの位置の計算
 	double mx, my, hi;
 	CPoint point;
@@ -179,6 +179,14 @@ void CAdminControl::AppendShape()
 	shape_head = newShape;
 }
 
+//選択の解除
+void CAdminControl::InitSelect()
+{
+	control_point = NULL;
+	control_edge = NULL;
+	control_shape = NULL;
+}
+
 //点と点の距離計算
 float CAdminControl::Distance(CVertex* s, float x, float y) {
 	float d;
@@ -190,6 +198,40 @@ float CAdminControl::Distance(CVertex* s, float x, float y) {
 	d = sqrt(pow(X, 2) + pow(Y, 2));
 
 	return d;
+}
+
+//点と線分の距離
+float CAdminControl::PointLineDistance(CVertex* nowV, CVertex* nextV, float x, float y) {
+
+	float apX = x - nowV->GetX();
+	float apY = y - nowV->GetY();
+	float bpX = x - nextV->GetX();
+	float bpY = y - nextV->GetY();
+	float baX = nowV->GetX() - nextV->GetX();
+	float baY = nowV->GetY() - nextV->GetY();
+
+	float gaiseki, naiseki, naiseki2;
+
+	float distance, s;
+
+	naiseki = bpX * baX + baY * bpY;
+	naiseki2 = baX * baX + baY * baY;
+
+	s = naiseki / naiseki2;
+
+	if (0 <= s && s <= 1) {
+		float d = sqrt(pow(baX, 2) + pow(baY, 2));
+		gaiseki = apX * baY - baX * apY;
+		distance = fabs(gaiseki / d);
+	}
+	else if (s > 1) {
+		distance = Distance(nowV, x, y);
+	}
+	else {
+		distance = Distance(nextV, x, y);
+	}
+
+	return distance;
 }
 
 //自交差判定　trueなら交差してない、falseなら交差している
@@ -379,12 +421,138 @@ boolean CAdminControl::Inclusion(CShape* nowS, float x, float y)
 	return true;
 }
 
+//形状の三角形部分の中に形状内の他の頂点が存在するかの判定 trueなら三角形内部に頂点無し、falseなら三角形内部に頂点有り
+boolean CAdminControl::TriangleInclusion(CShape* nowS, CVertex* v1, CVertex* v2, CVertex* v3)
+{
+	float ax, ay, bx, by, cx, cy;
+	float sum = 0, gaiseki, naiseki, tan;
+	
+	CVertex* nowV = nowS->GetV();
+	if (nowV == v1) {
+		nowV = nowV->GetNext();
+	}
+	if (nowV == v2) {
+		nowV = nowV->GetNext();
+	}
+	if (nowV == v3) {
+		nowV = nowV->GetNext();
+	}
+	//形状の終点の一つ前の点まで見る(始点と終点が同じ位置であるため)
+	while (nowV->GetNext() != NULL) {
+		ax = v1->GetX() - nowV->GetX();
+		ay = v1->GetY() - nowV->GetY();
+		bx = v2->GetX() - nowV->GetX();
+		by = v2->GetY() - nowV->GetY();
+		cx = v3->GetX() - nowV->GetX();
+		cy = v3->GetY() - nowV->GetY();
+
+		gaiseki = ax * by - bx * ay;
+		naiseki = ax * bx + ay * by;
+		tan = atan2(gaiseki, naiseki);
+		sum = sum + tan;
+
+		gaiseki = bx * cy - cx * by;
+		naiseki = bx * cx + by * cy;
+		tan = atan2(gaiseki, naiseki);
+		sum = sum + tan;
+
+		gaiseki = cx * ay - ax * cy;
+		naiseki = cx * ax + cy * ay;
+		float tan = atan2(gaiseki, naiseki);
+		sum = sum + tan;
+
+		if (2 * pi - fabs(sum) < 0.0001) {
+			return false;
+		}
+
+		nowV = nowV->GetNext();
+		//三角形の三点は見ないのでとばす
+		if (nowV == v1) {
+			nowV = nowV->GetNext();
+		}
+		if (nowV == v2) {
+			nowV = nowV->GetNext();
+		}
+		if (nowV == v3) {
+			nowV = nowV->GetNext();
+		}
+	}
+
+	return true;
+}
+
+//形状の三角形部分の中に三角形の三点を除く他の頂点が存在しているかの判定　trueなら三角形内部に頂点無し、falseなら三角形内部に頂点有り
+boolean CAdminControl::TriangleInclusion(CVertex* v1, CVertex* v2, CVertex* v3)
+{
+	float ax, ay, bx, by, cx, cy;
+	float sum = 0, gaiseki, naiseki, tan;
+	
+	CShape* nowS = shape_head->GetNextShape();
+	CVertex* nowV;
+
+	while (nowS != NULL) {
+		nowV = nowS->GetV();
+		if (nowV == v1) {
+			nowV = nowV->GetNext();
+		}
+		if (nowV == v2) {
+			nowV = nowV->GetNext();
+		}
+		if (nowV == v3) {
+			nowV = nowV->GetNext();
+		}
+		//形状の終点の一つ前の点まで見る(始点と終点が同じ位置であるため)
+		while (nowV->GetNext() != NULL) {
+			ax = v1->GetX() - nowV->GetX();
+			ay = v1->GetY() - nowV->GetY();
+			bx = v2->GetX() - nowV->GetX();
+			by = v2->GetY() - nowV->GetY();
+			cx = v3->GetX() - nowV->GetX();
+			cy = v3->GetY() - nowV->GetY();
+
+			gaiseki = ax * by - bx * ay;
+			naiseki = ax * bx + ay * by;
+			tan = atan2(gaiseki, naiseki);
+			sum = sum + tan;
+
+			gaiseki = bx * cy - cx * by;
+			naiseki = bx * cx + by * cy;
+			tan = atan2(gaiseki, naiseki);
+			sum = sum + tan;
+
+			gaiseki = cx * ay - ax * cy;
+			naiseki = cx * ax + cy * ay;
+			float tan = atan2(gaiseki, naiseki);
+			sum = sum + tan;
+
+			if (2 * pi - fabs(sum) < 0.0001) {
+				return false;
+			}
+
+			nowV = nowV->GetNext();
+			//三角形の三点は見ないのでとばす
+			if (nowV == v1) {
+				nowV = nowV->GetNext();
+			}
+			if (nowV == v2) {
+				nowV = nowV->GetNext();
+			}
+			if (nowV == v3) {
+				nowV = nowV->GetNext();
+			}
+		}
+		nowS = nowS->GetNextShape();
+	}
+
+	return true;
+}
 
 //形状の内包判定 trueなら内包していない、falseなら内包している
 boolean CAdminControl::Wrap()
 {
 	CShape* nowS = shape_head;
-	CVertex* nowSV;      //nowS(形状)の始点
+	//nowS(形状)の始点
+	CVertex* nowSV;
 	CVertex* nowV;
 	CVertex* nextV;
 
@@ -431,203 +599,240 @@ boolean CAdminControl::Wrap()
 	return true;
 }
 
-//点と線分の距離
-float CAdminControl::PointLineDistance(CVertex* nowV, CVertex* nextV, float x, float y) {
-	float apX = x - nowV->GetX();
-	float apY = y - nowV->GetY();
-	float abX = nextV->GetX() - nowV->GetX();
-	float abY = nextV->GetY() - nowV->GetY();
-	float bpX = x - nextV->GetX();
-	float bpY = y - nextV->GetY();
-	float baX = nowV->GetX() - nextV->GetX();
-	float baY = nowV->GetY() - nextV->GetY();
-
-	float gaiseki, naiseki, gaiseki2, naiseki2, nasukaku, nasukaku2;
-
-	float distance;
-
-	gaiseki = apX * abY - abX * apY;
-	naiseki = apX * abX + apY * abY;
-	gaiseki2 = bpX * baY - baX * bpY;
-	naiseki2 = bpX * baX + baY * bpY;
-
-	nasukaku = fabs(atan2(gaiseki, naiseki));
-	nasukaku2 = fabs(atan2(gaiseki2, naiseki2));
-
-	if (pi / 2 <= nasukaku) {
-		//a点とp点の距離
-		distance = Distance(nowV, x, y);
-	}
-	else if (pi / 2 <= nasukaku2) {
-		//b点とp点の距離
-		distance =  Distance(nextV, x, y);
-	}
-	else {
-		//p点と直線abの距離の計算
-		float a, b;
-
-		a = sqrt(pow(abX, 2) + pow(abY, 2));
-		b = sqrt(pow(apX, 2) + pow(apY, 2));
-
-		distance = b * fabs((abX * apY - apX * abY) / (a * b));
-	}
-
-	return distance;
-}
-
-//形状の頂点の配置方向判定　trueなら時計周り、falseなら反時計周り
-boolean CAdminControl::Direction(CShape* nowS)
-{
-	float sum = 0;
-	CVertex* nowV = nowS->GetV();
-	CVertex* nextV = nowV->GetNext();
-
-	while (nextV != NULL) {
-		
-		sum += nowV->GetX() * nextV->GetY() - nextV->GetX() * nowV->GetY();
-
-		nowV = nextV;
-		nextV = nextV->GetNext();
-	}
-	if (sum < 0) {
-		return true;
-	}
-
-	return false;
-}
-
-//三角形の配置方向判定 trueなら時計周り、falseなら半時計周り
-boolean CAdminControl::TriangleDirection(CVertex* startV, CVertex* middleV, CVertex* endV) {
-	
-	float sum = 0;
-	float sx, sy, mx, my, ex, ey;
-
-	sx = startV->GetX();
-	sy = startV->GetY();
-	mx = middleV->GetX();
-	my = middleV->GetY();
-	ex = endV->GetX();
-	ey = endV->GetY();
-
-	sum += sx * my - mx * sy;
-	sum += mx * ey - ex * my;
-	sum += ex * sy - sx * ey;
-
-	if (sum < 0) {
-		return true;
-	}
-
-	return false;
-}
-
-//左クリックで点の追加やそれ以外の形状の編集をするとき
+//頂点の追加
 void CAdminControl::CreateShape(float x, float y)
 {
-	/*-----------------------*/
-	/*  形状の選択をするとき */
-	/*-----------------------*/
-	
-	/*形状が一つ以上存在していて、全ての形状が閉じているとき*/
-	if (shape_head != NULL && shape_head->GetV() == NULL) {
-		CShape* nowS = shape_head->GetNextShape();
-		CVertex* nowV = nowS->GetV();
-		CVertex* nextV = nowV->GetNext();
-
-		while (nowS != NULL) {
-			nowV = nowS->GetV();
-			nextV = nowV->GetNext();
-
-			//始点の選択
-			if (Distance(nowV, x, y) <= select_dist) {
-				control_point = nowV;
-				control_edge = NULL;
-				control_shape = NULL;
-				return;
-			}
-			while (nextV != NULL) {
-				//始点以外の頂点の選択
-				if (Distance(nextV, x, y) <= select_dist) {
-					control_point = nextV;
-					control_edge = NULL;
-					control_shape = NULL;
-					return;
-				}
-				//稜線の選択
-				if (PointLineDistance(nowV, nextV, x, y) <= select_dist) {
-					control_point = NULL;
-					control_edge = nowV;
-					control_shape = NULL;
-					return;
-				}
-				
-				nowV = nextV;
-				nextV = nextV->GetNext();
-			}
-			//形状の選択
-			if (!Inclusion(nowS, x, y)) {
-				control_shape = nowS;
-				control_edge = NULL;
-				control_point = NULL;
-				return;
-			}
-			
-			nowS = nowS->GetNextShape();
-		}
-		control_point = NULL;
-		control_edge = NULL;
-		control_shape = NULL;
-	}
-
-	/*------------------------*/
-	/*  点を追加していくとき  */
-	/*------------------------*/
-	
+	//一番最初クリックされたときにshape生成
 	if (shape_head == NULL) {
 		AppendShape();
 	}
 
-	//前の点と同じ座標に点を打った場合
+	//一つ前の点の位置とクリックした位置を比較する
 	if (shape_head->CountVertex() >= 1) {
 		CVertex* endV = shape_head->GetV();
 		while (endV->GetNext() != NULL) {
 			endV = endV->GetNext();
 		}
-
-		if (Distance(endV, x, y) <= point_dist) {
+		//全く同じ場所に打った場合return
+		if (endV->GetX() == x && endV->GetY() == y) {
 			return;
 		}
 	}
-
+	//点が3点未満の場合
 	if (shape_head->CountVertex() < 3) {
+		//一点目かどうか
 		if (shape_head->CountVertex() == 0) {
 			if (Inclusion(x, y)) {
 				shape_head->AppendVertex(x, y);
 			}
 		}
 		else {
+			//一点目と今回打つ三点目が近い場合、三点目を追加せずにreturn
 			if (shape_head->CountVertex() == 2 && Distance(shape_head->GetV(), x, y) <= point_dist) {
 				return;
 			}
+			//他交差していなければ点の追加
 			if (OtherCross(x, y)) {
 				shape_head->AppendVertex(x, y);
 			}
 		}
 	}
+	//4点目以降でクリックした位置と始点が近い場合
 	else if (Distance(shape_head->GetV(), x, y) <= 0.1) {
 		float sx = shape_head->GetV()->GetX();
 		float sy = shape_head->GetV()->GetY();
-
+		
+		//始点に向けて線を引いたとき、自交差＆他交差＆形状の内包をしていなければ始点の位置に点を追加して形状を閉じる
 		if (OtherCross(sx, sy) && Cross(sx, sy) && Wrap()) {
 			shape_head->AppendVertex(sx, sy);
 			AppendShape();
 		}
+		//自交差＆他交差してなければ点を追加
 		else if (OtherCross(x, y) && Cross(x, y)) {
 			shape_head->AppendVertex(x, y);
 		}
 	}
+	//4点目以降
 	else {
+		//自交差＆他交差してなければ点を追加
 		if (OtherCross(x, y) && Cross(x, y)) {
 			shape_head->AppendVertex(x, y);
 		}
 	}
 }
+
+//点の削除
+void CAdminControl::DeletePoint(CVertex* deleteV)
+{
+	if (deleteV == NULL && control_point == NULL) {
+		return;
+	}
+	CShape* nowS = shape_head->GetNextShape();
+	CVertex* nowV = NULL;
+	CVertex* preV = NULL;
+
+	if (deleteV == NULL) {
+		deleteV = control_point;
+	}
+
+	while (nowS != NULL) {
+		nowV = nowS->GetV();
+		while (nowV != NULL) {
+			//形状の頂点が4点以下の場合削除しない
+			if (nowS->CountVertex() <= 4) {
+				break;
+			}
+			if (nowV == deleteV) {
+				//選択された点が形状の始点の場合
+				if (preV == NULL) {
+					while (nowV->GetNext() != NULL) {
+						preV = nowV;
+						nowV = nowV->GetNext();
+					}
+					//選択された点を削除してよいかの判定
+					if (TriangleInclusion(preV, deleteV, deleteV->GetNext())) {
+						nowS->ChangeVHead(deleteV->GetNext());
+						delete nowV;
+						delete deleteV;
+						preV->SetNext(NULL);
+						nowS->AppendVertex(nowS->GetV()->GetX(), nowS->GetV()->GetY());
+						control_point = NULL;
+					}
+				}
+				//終点一つ前の点が選択されている場合
+				else if (deleteV->GetNext()->GetNext() == NULL && TriangleInclusion(preV, deleteV, nowS->GetV())) {
+					preV->SetNext(deleteV->GetNext());
+					delete deleteV;
+					control_point = NULL;
+				}
+				//それ以外の点が選択されている場合
+				else if (TriangleInclusion(preV, deleteV, deleteV->GetNext())) {
+					preV->SetNext(deleteV->GetNext());
+					delete deleteV;
+					control_point = NULL;
+				}
+				return;
+			}
+			preV = nowV;
+			nowV = nowV->GetNext();
+		}
+		preV = NULL;
+		nowS = nowS->GetNextShape();
+	}
+
+	return;
+}
+
+//三角形分割中の三角形の削除
+void CAdminControl::DeleteTriangle(CShape* printS, CVertex* deleteV)
+{
+	CVertex* nowV = printS->GetV();
+	CVertex* preV = NULL;
+
+	while (nowV != NULL) {
+		if (nowV == deleteV) {
+			//選択された点が形状の始点の場合
+			if (preV == NULL) {
+				while (nowV->GetNext() != NULL) {
+					preV = nowV;
+					nowV = nowV->GetNext();
+				}
+				printS->ChangeVHead(deleteV->GetNext());
+				delete nowV;
+				delete deleteV;
+				preV->SetNext(NULL);
+				printS->AppendVertex(printS->GetV()->GetX(), printS->GetV()->GetY());
+			}
+			//始点以外の点が選択されている場合
+			else {
+				preV->SetNext(deleteV->GetNext());
+				delete deleteV;
+			}
+			return;
+		}
+		preV = nowV;
+		nowV = nowV->GetNext();
+	}
+
+	return;
+}
+
+//形状の選択をして良いかの判定する　できるときはtrue
+boolean CAdminControl::CanSelect() 
+{
+	//形状が一つ以上存在していて、全ての形状が閉じているとき
+	if (shape_head != NULL && shape_head->GetV() == NULL) {
+		return true;
+	}
+
+	return false;
+}
+
+//形状の選択(形状の最終点が選ばれることはない)
+void CAdminControl::SelectShape(float x, float y)
+{
+	CShape* nowS = shape_head->GetNextShape();
+	CVertex* nowV = nowS->GetV();
+	CVertex* nextV = nowV->GetNext();
+
+	CVertex* selectPoint = NULL;
+	CVertex* selectEdge = NULL;
+	CShape* selectShape = NULL;
+
+	float nowPdist, nowEdist;
+	float minPdist = select_dist, minEdist = select_dist;
+
+	while (nowS != NULL) {
+		nowV = nowS->GetV();
+		nextV = nowV->GetNext();
+
+		//始点だけ近いか見る
+		nowPdist = Distance(nowV, x, y);
+		if (nowPdist < minPdist) {
+			selectPoint = nowV;
+			minPdist = nowPdist;
+		}
+		while (nextV != NULL) {
+			//select_distより近い点の中で一番近い点を格納
+			nowPdist = Distance(nextV, x, y);
+			nowEdist = PointLineDistance(nowV, nextV, x, y);
+			if (nowPdist < minPdist) {
+				selectPoint = nextV;
+				minPdist = nowPdist;
+			}
+			//select_distより近い稜線の中で一番近い辺を格納
+			if (nowEdist < minEdist) {
+				selectEdge = nowV;
+				minEdist = nowEdist;
+			}
+			nowV = nextV;
+			nextV = nextV->GetNext();
+		}
+		//クリックした位置を内包している形状を格納
+		if (!Inclusion(nowS, x, y)) {
+			selectShape = nowS;
+		}
+
+		nowS = nowS->GetNextShape();
+	}
+	//頂点の選択
+	if (selectPoint != NULL) {
+		InitSelect();
+		control_point = selectPoint;
+		return;
+	}
+	//稜線の選択
+	if (selectEdge != NULL) {
+		InitSelect();
+		control_edge = selectEdge;
+		return;
+	}
+	//形状の選択
+	if (selectShape != NULL) {
+		InitSelect();
+		control_shape = selectShape;
+		return;
+	}
+	InitSelect();
+}
+

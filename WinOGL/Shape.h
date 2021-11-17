@@ -20,6 +20,8 @@ public:
 
 	CVertex* AppendVertex(float x, float y);
 	int CountVertex();
+	void ChangeVHead(CVertex* new_head);
+	void InitVHead();
 
 private:
 	CShape* next_shape = NULL;

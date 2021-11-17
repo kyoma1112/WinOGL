@@ -72,3 +72,16 @@ int CShape::CountVertex()
 
 	return c;
 }
+
+void CShape::ChangeVHead(CVertex* new_head)
+{
+	vertex_head = new_head;
+	vertex_head->SetNext(new_head->GetNext());
+}
+
+void CShape::InitVHead()
+{
+	vertex_head = NULL;
+}
+
+
