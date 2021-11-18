@@ -41,6 +41,8 @@ public:
 	void DeletePoint(CVertex* deleteV);
 	//三角形分割中の三角形の削除
 	void DeleteTriangle(CShape* printS, CVertex* deleteV);
+	//頂点の移動
+	void MovePoint(CVertex* moveV, float x, float y);
 	//形状の選択
 	void SelectShape(float x, float y);
 
@@ -48,6 +50,8 @@ public:
 	boolean Cross(float mx, float my);
 	//他交差判定　trueなら交差してない、falseなら交差している
 	boolean OtherCross(float mx, float my);
+	//二点をつなぐ直線と他の直線との交差判定　trueなら交差してない、falseなら交差している
+	boolean LineCross(CVertex* Bs, float Be_x, float Be_y);
 	//交差計算  trueなら交差してる、falseなら交差していない
 	boolean CrossCalc(CVertex* As, CVertex* Ae, CVertex* Bs, float mx, float my);
 	//点の内包判定(全ての形状で判定する)　trueなら外、falseなら内

@@ -124,6 +124,12 @@ void CAdminControl::Draw()
 
 		glEnd();
 	}
+
+	/*
+	if (control_shape != NULL) {
+		DrawArea(control_shape);
+	}
+	*/
 }
 
 //カーソルの表示
@@ -297,6 +303,48 @@ boolean CAdminControl::OtherCross(float mx, float my)
 			Ae = Ae->GetNext();
 		}
 
+		nowS = nowS->GetNextShape();
+	}
+
+	return true;
+}
+
+//二点をつなぐ直線と他の直線との交差判定　trueなら交差してない、falseなら交差している
+boolean CAdminControl::LineCross(CVertex* Bs, float Be_x, float Be_y)
+{
+	CShape* nowS = shape_head->GetNextShape();
+	CVertex* As;
+	CVertex* Ae;
+
+	while (nowS != NULL) {
+		As = nowS->GetV();
+		Ae = As->GetNext();
+		while ((As == Bs || Ae == Bs || (Be_x == As->GetX() && Be_y == As->GetY()) || (Be_x == Ae->GetX() && Be_y == Ae->GetY())) && As->GetNext() != NULL) {
+			As = As->GetNext();
+			Ae = Ae->GetNext();
+			if (Ae->GetNext() == NULL) {
+				Ae = nowS->GetV();
+			}
+		}
+
+		while (As->GetNext() != NULL) {
+			if (CrossCalc(As, Ae, Bs, Be_x, Be_y)) {
+				return false;
+			}
+
+			As = As->GetNext();
+			Ae = Ae->GetNext();
+			if (Ae->GetNext() == NULL) {
+				Ae = nowS->GetV();
+			}
+			while ((As == Bs || Ae == Bs || (Be_x == As->GetX() && Be_y == As->GetY()) || (Be_x == Ae->GetX() && Be_y == Ae->GetY())) && As->GetNext() != NULL) {
+				As = As->GetNext();
+				Ae = Ae->GetNext();
+				if (Ae->GetNext() == NULL) {
+					Ae = nowS->GetV();
+				}
+			}
+		}
 		nowS = nowS->GetNextShape();
 	}
 
@@ -708,7 +756,7 @@ void CAdminControl::DeletePoint(CVertex* deleteV)
 					control_point = NULL;
 				}
 				//それ以外の点が選択されている場合
-				else if (TriangleInclusion(preV, deleteV, deleteV->GetNext())) {
+				else if (deleteV->GetNext()->GetNext() != NULL && TriangleInclusion(preV, deleteV, deleteV->GetNext())) {
 					preV->SetNext(deleteV->GetNext());
 					delete deleteV;
 					control_point = NULL;
@@ -756,6 +804,66 @@ void CAdminControl::DeleteTriangle(CShape* printS, CVertex* deleteV)
 		nowV = nowV->GetNext();
 	}
 
+	return;
+}
+
+//頂点の移動
+void CAdminControl::MovePoint(CVertex* moveV, float x, float y)
+{
+	if (moveV == NULL) {
+		moveV = control_point;
+	}
+
+	CShape* nowS = shape_head->GetNextShape();
+	CVertex* v1 = NULL;
+	CVertex* v2 = NULL;
+	CVertex* v3 = NULL;
+
+	while (nowS != NULL) {
+		v2 = nowS->GetV();
+		v3 = v2->GetNext();
+		while (v2->GetNext() != NULL) {
+			if (v2 == moveV) {
+				//選択された点が形状の始点の場合
+				if (v1 == NULL) {
+					v1 = v2;
+					while (v1->GetNext()->GetNext() != NULL) {
+						v1 = v1->GetNext();
+					}
+					if (LineCross(v1, x, y) && LineCross(v3, x, y)){
+						v2->SetX(x);
+						v2->SetY(y);
+						v1->GetNext()->SetX(x);
+						v1->GetNext()->SetY(y);
+					}
+				}
+				//終点一つ前の点が選択されている場合
+				else if (v3->GetNext() == NULL) {
+					v3 = nowS->GetV();
+					if (LineCross(v1, x, y) && LineCross(v3, x, y)) {
+						v2->SetX(x);
+						v2->SetY(y);
+					}
+				}
+				//それ以外の点が選択されている場合
+				else {
+					if(LineCross(v1, x, y) && LineCross(v3, x, y)) {
+						v2->SetX(x);
+						v2->SetY(y);
+					}
+				}
+				return;
+			}
+			v1 = v2;
+			v2 = v3;
+			v3 = v3->GetNext();
+		}
+		v1 = NULL;
+		v2 = NULL;
+		v3 = NULL;
+		nowS = nowS->GetNextShape();
+	}
+	
 	return;
 }
 

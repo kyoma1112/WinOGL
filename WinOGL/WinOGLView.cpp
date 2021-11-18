@@ -116,6 +116,8 @@ CWinOGLDoc* CWinOGLView::GetDocument() const // デバッグ以外のバージ�
 void CWinOGLView::OnLButtonDown(UINT nFlags, CPoint point)
 {
 	// TODO: ここにメッセージ ハンドラー コードを追加するか、既定の処理を呼び出します。
+	LDown = true;
+
 	CRect rect;
 	GetClientRect(rect); // 描画領域の大きさを取得
 	
@@ -147,6 +149,26 @@ void CWinOGLView::OnLButtonDown(UINT nFlags, CPoint point)
 void CWinOGLView::OnLButtonUp(UINT nFlags, CPoint point)
 {
 	// TODO: ここにメッセージ ハンドラー コードを追加するか、既定の処理を呼び出します。
+	LDown = false;
+
+	CRect rect;
+	GetClientRect(rect); // 描画領域の大きさを取得
+
+	ClickX = (double)point.x / rect.Width(); //X正規化座標系
+	ClickY = (double)point.y / rect.Height();
+	ClickY = (ClickY - 1) * -1; //Y正規化座標系
+	ClickX = ClickX * 2 - 1; //Xワールド座標系
+	ClickY = ClickY * 2 - 1; //Yワールド座標系
+	double hi;
+
+	if (rect.Width() > rect.Height()) {     //画面サイズに合わせてX,Yを調整
+		hi = (double)rect.Width() / rect.Height();
+		ClickX = ClickX * hi;
+	}
+	else {
+		hi = (double)rect.Height() / rect.Width();
+		ClickY = ClickY * hi;
+	}
 
 	if (AC.editMode) {
 		AC.SelectShape(ClickX, ClickY);
@@ -160,7 +182,8 @@ void CWinOGLView::OnLButtonUp(UINT nFlags, CPoint point)
 void CWinOGLView::OnMouseMove(UINT nFlags, CPoint point)
 {
 	// TODO: ここにメッセージ ハンドラー コードを追加するか、既定の処理を呼び出します。
-	if (AC.cursorMode) {
+
+	if (AC.cursorMode || LDown) {
 		CRect rect;
 		GetClientRect(rect); // 描画領域の大きさを取得
 
@@ -179,6 +202,10 @@ void CWinOGLView::OnMouseMove(UINT nFlags, CPoint point)
 			hi = (double)rect.Height() / rect.Width();
 			NowY = NowY * hi;
 		}
+	}
+
+	if (AC.editMode && LDown) {
+		AC.MovePoint(NULL, NowX, NowY);
 	}
 
 

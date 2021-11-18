@@ -42,7 +42,7 @@ private:
 	HGLRC m_hRC;
 
 	CAdminControl AC;
-
+	boolean LDown = false;
 public:
 	afx_msg void OnLButtonDown(UINT nFlags, CPoint point);
 	afx_msg int OnCreate(LPCREATESTRUCT lpCreateStruct);
