@@ -19,6 +19,7 @@ public:
 	void FreeShape();
 
 	CVertex* AppendVertex(float x, float y);
+	CVertex* AppendVertex(CVertex* preV, float x, float y);
 	int CountVertex();
 	void ChangeVHead(CVertex* new_head);
 	void InitVHead();

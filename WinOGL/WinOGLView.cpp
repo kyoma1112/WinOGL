@@ -35,6 +35,8 @@ BEGIN_MESSAGE_MAP(CWinOGLView, CView)
 	ON_UPDATE_COMMAND_UI(ID_EDIT, &CWinOGLView::OnUpdateEdit)
 	ON_UPDATE_COMMAND_UI(ID_CURSOR, &CWinOGLView::OnUpdateCursor)
 	ON_WM_RBUTTONDBLCLK()
+	ON_WM_RBUTTONUP()
+	ON_WM_MOUSEWHEEL()
 END_MESSAGE_MAP()
 
 // CWinOGLView コンストラクション/デストラクション
@@ -183,7 +185,7 @@ void CWinOGLView::OnMouseMove(UINT nFlags, CPoint point)
 {
 	// TODO: ここにメッセージ ハンドラー コードを追加するか、既定の処理を呼び出します。
 
-	if (AC.cursorMode || LDown) {
+	if (AC.cursorMode || LDown || RDown) {
 		CRect rect;
 		GetClientRect(rect); // 描画領域の大きさを取得
 
@@ -206,22 +208,98 @@ void CWinOGLView::OnMouseMove(UINT nFlags, CPoint point)
 
 	if (AC.editMode && LDown) {
 		AC.MovePoint(NULL, NowX, NowY);
+		AC.MoveShape(NULL, NowX, NowY);
 	}
 
+	if (AC.editMode && RDown) {
+		if (AC.GetBasePoint() != NULL) {
+			AC.RotateShape(NULL, AC.GetBasePoint()->GetX(), AC.GetBasePoint()->GetY(), NowX, NowY);
+			RotateMove = true;
+		}
+	}
 
 	RedrawWindow();
 	CView::OnMouseMove(nFlags, point);
 }
 
-void CWinOGLView::OnRButtonDown(UINT nFlags, CPoint point)
+BOOL CWinOGLView::OnMouseWheel(UINT nFlags, short zDelta, CPoint pt)
 {
 	// TODO: ここにメッセージ ハンドラー コードを追加するか、既定の処理を呼び出します。
 	if (AC.editMode) {
+		if (AC.GetBasePoint() != NULL) {
+			AC.ResizeShape(NULL, AC.GetBasePoint()->GetX(), AC.GetBasePoint()->GetY(), zDelta);
+		}
+	}
+	
+	RedrawWindow();
+	return CView::OnMouseWheel(nFlags, zDelta, pt);
+}
+
+void CWinOGLView::OnRButtonDown(UINT nFlags, CPoint point)
+{
+	// TODO: ここにメッセージ ハンドラー コードを追加するか、既定の処理を呼び出します。
+	RDown = true;
+
+	CRect rect;
+	GetClientRect(rect); // 描画領域の大きさを取得
+
+	ClickX = (double)point.x / rect.Width(); //X正規化座標系
+	ClickY = (double)point.y / rect.Height();
+	ClickY = (ClickY - 1) * -1; //Y正規化座標系
+	ClickX = ClickX * 2 - 1; //Xワールド座標系
+	ClickY = ClickY * 2 - 1; //Yワールド座標系
+	double hi;
+
+	if (rect.Width() > rect.Height()) {     //画面サイズに合わせてX,Yを調整
+		hi = (double)rect.Width() / rect.Height();
+		ClickX = ClickX * hi;
+	}
+	else {
+		hi = (double)rect.Height() / rect.Width();
+		ClickY = ClickY * hi;
+	}
+
+	if (AC.editMode) {
 		AC.DeletePoint(NULL);
+		AC.DivideEdge(NULL);
 	}
 
 	RedrawWindow();
 	CView::OnRButtonDown(nFlags, point);
+}
+
+void CWinOGLView::OnRButtonUp(UINT nFlags, CPoint point)
+{
+	// TODO: ここにメッセージ ハンドラー コードを追加するか、既定の処理を呼び出します。
+	RDown = false;
+
+	CRect rect;
+	GetClientRect(rect); // 描画領域の大きさを取得
+
+	ClickX = (double)point.x / rect.Width(); //X正規化座標系
+	ClickY = (double)point.y / rect.Height();
+	ClickY = (ClickY - 1) * -1; //Y正規化座標系
+	ClickX = ClickX * 2 - 1; //Xワールド座標系
+	ClickY = ClickY * 2 - 1; //Yワールド座標系
+	double hi;
+
+	if (rect.Width() > rect.Height()) {     //画面サイズに合わせてX,Yを調整
+		hi = (double)rect.Width() / rect.Height();
+		ClickX = ClickX * hi;
+	}
+	else {
+		hi = (double)rect.Height() / rect.Width();
+		ClickY = ClickY * hi;
+	}
+
+	if (AC.editMode && AC.NowSelect() == 3 && !RotateMove) {
+		AC.AddBasePoint(ClickX, ClickY);
+	}
+
+	RotateMove = false;
+
+	RedrawWindow();
+	CView::OnRButtonUp(nFlags, point);
 }
 
 void CWinOGLView::OnRButtonDblClk(UINT nFlags, CPoint point)

@@ -43,6 +43,8 @@ private:
 
 	CAdminControl AC;
 	boolean LDown = false;
+	boolean RDown = false;
+	boolean RotateMove = false;
 public:
 	afx_msg void OnLButtonDown(UINT nFlags, CPoint point);
 	afx_msg int OnCreate(LPCREATESTRUCT lpCreateStruct);
@@ -57,6 +59,8 @@ public:
 	afx_msg void OnUpdateEdit(CCmdUI* pCmdUI);
 	afx_msg void OnUpdateCursor(CCmdUI* pCmdUI);
 	afx_msg void OnRButtonDblClk(UINT nFlags, CPoint point);
+	afx_msg void OnRButtonUp(UINT nFlags, CPoint point);
+	afx_msg BOOL OnMouseWheel(UINT nFlags, short zDelta, CPoint pt);
 };
 
 #ifndef _DEBUG  // WinOGLView.cpp のデバッグ バージョン

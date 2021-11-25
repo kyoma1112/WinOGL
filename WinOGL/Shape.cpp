@@ -62,6 +62,16 @@ CVertex* CShape::AppendVertex(float x, float y)
 	return newVertex;
 }
 
+CVertex* CShape::AppendVertex(CVertex* preV, float x, float y)
+{
+	CVertex* newVertex = new CVertex(x, y);
+
+	newVertex->SetNext(preV->GetNext());
+	preV->SetNext(newVertex);
+	
+	return newVertex;
+}
+
 int CShape::CountVertex()
 {
 	int c = 0;
