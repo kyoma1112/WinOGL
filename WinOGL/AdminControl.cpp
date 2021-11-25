@@ -1281,28 +1281,58 @@ void CAdminControl::MoveShape(CShape* moveS, float x, float y)
 }
 
 //辺上に点を追加する
-void CAdminControl::DivideEdge(CVertex* preV)
+void CAdminControl::DivideEdge(CVertex* v1, float x, float y)
 {
-	if (control_edge == NULL && preV == NULL) {
+	if (control_edge == NULL && v1 == NULL) {
 		return;
 	}
-	if (preV == NULL) {
-		preV = control_edge;
+	if (v1 == NULL) {
+		v1 = control_edge;
 	}
-	if (preV->GetNext() == NULL) {
+	if (v1->GetNext() == NULL) {
 		return;
 	}
 
-	CVertex* nextV = preV->GetNext();
-	float new_x = (preV->GetX() + nextV->GetX()) / 2;
-	float new_y = (preV->GetY() + nextV->GetY()) / 2;
+	CVertex* v2 = v1->GetNext();
+	CShape* nowS = shape_head->GetNextShape();
+	CVertex* nowV;
+	//選択した辺が含まれている形状を探す
+	while (nowS != NULL) {
+		nowV = nowS->GetV();
+		while (nowV != NULL) {
+			//nowVが選択した点だった場合
+			if (nowV == v1) {
+				//クリックした座標が近い場合
+				if (PointLineDistance(v1, v2, x, y) <= select_dist) {
+					float apX = x - v1->GetX();
+					float apY = y - v1->GetY();
+					float bpX = x - v2->GetX();
+					float bpY = y - v2->GetY();
+					float baX = v1->GetX() - v2->GetX();
+					float baY = v1->GetY() - v2->GetY();
 
-	CVertex* newVertex = new CVertex(new_x, new_y);
+					float naiseki, naiseki2, s;
 
-	newVertex->SetNext(preV->GetNext());
-	preV->SetNext(newVertex);
+					naiseki = bpX * baX + baY * bpY;
+					naiseki2 = baX * baX + baY * baY;
 
-	control_edge = NULL;
+					s = naiseki / naiseki2;
+					if (0 <= s && s <= 1) {
+						float newX = v1->GetX() + (v2->GetX() - v1->GetX()) * (1-s);
+						float newY = v1->GetY() + (v2->GetY() - v1->GetY()) * (1-s);
+						CVertex* newVertex = new CVertex(newX, newY);
+						newVertex->SetNext(v1->GetNext());
+						v1->SetNext(newVertex);
+						control_edge = NULL;
+					}
+				}
+				
+				return;
+			}
+			nowV = nowV->GetNext();
+		}
+		nowS = nowS->GetNextShape();
+	}
 
 	return;
 }
@@ -1322,7 +1352,6 @@ void CAdminControl::AddBasePoint(float x, float y)
 {
 	if (base_point == NULL) {
 		CVertex* new_point = new CVertex(x, y);
-
 		base_point = new_point;
 	}
 	else {
@@ -1357,7 +1386,7 @@ void CAdminControl::RotateShape(CShape* rotateS,float baseX, float baseY, float 
 		return;
 	}
 
-	float centerX, centerY, sumX = 0, sumY = 0, nasukaku;
+	float centerX, centerY, sumX = 0, sumY = 0, newX, newY, nasukaku;
 
 	CVertex* nowV = rotateS->GetV();
 	//重心を求める
@@ -1375,11 +1404,64 @@ void CAdminControl::RotateShape(CShape* rotateS,float baseX, float baseY, float 
 	nowV = rotateS->GetV();
 	//全ての頂点をnasukaku分回転させる
 	while (nowV != NULL) {
-		nowV->SetX((nowV->GetX() - baseX) * cos(nasukaku) - (nowV->GetY() - baseY) * sin(nasukaku) + baseX);
-		nowV->SetY((nowV->GetX() - baseX) * sin(nasukaku) + (nowV->GetY() - baseY) * cos(nasukaku) + baseY);
-		//nowV->SetX(nowV->GetX() * cos(nasukaku) - nowV->GetY() * sin(nasukaku) + baseX-baseX*cos(nasukaku)+baseY*sin(nasukaku));
-		//nowV->SetY(nowV->GetX() * sin(nasukaku) + nowV->GetY() * cos(nasukaku) + baseY-baseX*sin(nasukaku)-baseY*cos(nasukaku));
+		newX = (nowV->GetX() - baseX) * cos(nasukaku) - (nowV->GetY() - baseY) * sin(nasukaku) + baseX;
+		newY = (nowV->GetX() - baseX) * sin(nasukaku) + (nowV->GetY() - baseY) * cos(nasukaku) + baseY;
+		nowV->SetX(newX);
+		nowV->SetY(newY);
 		nowV = nowV->GetNext();
+	}
+
+	//形状に内包されていないか判定する
+	nowV = rotateS->GetV();
+	CShape* nowS = shape_head->GetNextShape();
+	while (nowS != NULL) {
+		if (!Inclusion(nowS, rotateS->GetV()->GetX(), rotateS->GetV()->GetY())) {
+			while (nowV != NULL) {
+				newX = (nowV->GetX() - baseX) * cos(-1 * nasukaku) - (nowV->GetY() - baseY) * sin(-1 * nasukaku) + baseX;
+				newY = (nowV->GetX() - baseX) * sin(-1 * nasukaku) + (nowV->GetY() - baseY) * cos(-1* nasukaku) + baseY;
+				nowV->SetX(newX);
+				nowV->SetY(newY);
+				nowV = nowV->GetNext();
+			}
+			return;
+		}
+		nowS = nowS->GetNextShape();
+		if (nowS == rotateS) {
+			nowS = nowS->GetNextShape();
+		}
+	}
+
+	//形状を内包していないか判定する
+	if (!Wrap(rotateS)) {
+		while (nowV != NULL) {
+			newX = (nowV->GetX() - baseX) * cos(-1 * nasukaku) - (nowV->GetY() - baseY) * sin(-1 * nasukaku) + baseX;
+			newY = (nowV->GetX() - baseX) * sin(-1 * nasukaku) + (nowV->GetY() - baseY) * cos(-1 * nasukaku) + baseY;
+			nowV->SetX(newX);
+			nowV->SetY(newY);
+			nowV = nowV->GetNext();
+		}
+		return;
+	}
+
+	//移動させる形状の全ての辺が他交差していないか判定する
+	CVertex* nextV = nowV->GetNext();
+	while (nowV->GetNext() != NULL) {
+		if (!OtherCross(rotateS, nowV, nextV)) {
+			nowV = rotateS->GetV();
+			while (nowV != NULL) {
+				newX = (nowV->GetX() - baseX) * cos(-1 * nasukaku) - (nowV->GetY() - baseY) * sin(-1 * nasukaku) + baseX;
+				newY = (nowV->GetX() - baseX) * sin(-1 * nasukaku) + (nowV->GetY() - baseY) * cos(-1 * nasukaku) + baseY;
+				nowV->SetX(newX);
+				nowV->SetY(newY);
+				nowV = nowV->GetNext();
+			}
+			return;
+		}
+		nowV = nowV->GetNext();
+		nextV = nextV->GetNext();
+		if (nextV->GetNext() == NULL) {
+			nextV = rotateS->GetV();
+		}
 	}
 
 	return;
@@ -1400,22 +1482,93 @@ void CAdminControl::ResizeShape(CShape* resizeS, float baseX, float baseY, short
 
 	CVertex* nowV;
 	int angle = (int)zDelta / 15, i = 0;
+	float add = pow(1.001, abs(angle));
+	float sub = pow(0.999, abs(angle));
 
-	for (i = 0; i < abs(angle); i++) {
-		nowV = resizeS->GetV();
-		while (nowV != NULL) {
-			if (angle > 0) {
-				nowV->SetX(1.01 * (nowV->GetX() - baseX) + baseX);
-				nowV->SetY(1.01 * (nowV->GetY() - baseY) + baseY);
+	nowV = resizeS->GetV();
+	while (nowV != NULL) {
+		if (angle > 0) {
+			nowV->SetX(add * (nowV->GetX() - baseX) + baseX);
+			nowV->SetY(add * (nowV->GetY() - baseY) + baseY);
+		}
+		else if (angle < 0) {
+			nowV->SetX(sub * (nowV->GetX() - baseX) + baseX);
+			nowV->SetY(sub * (nowV->GetY() - baseY) + baseY);
+		}
+		nowV = nowV->GetNext();
+	}
+
+	//形状に内包されていないか判定する
+	angle *= -1;
+	nowV = resizeS->GetV();
+	CShape* nowS = shape_head->GetNextShape();
+	while (nowS != NULL) {
+		if (!Inclusion(nowS, resizeS->GetV()->GetX(), resizeS->GetV()->GetY())) {
+			nowV = resizeS->GetV();
+			while (nowV != NULL) {
+				if (angle > 0) {
+					nowV->SetX(add * (nowV->GetX() - baseX) + baseX);
+					nowV->SetY(add * (nowV->GetY() - baseY) + baseY);
+				}
+				else if (angle < 0) {
+					nowV->SetX(sub * (nowV->GetX() - baseX) + baseX);
+					nowV->SetY(sub * (nowV->GetY() - baseY) + baseY);
+				}
+				nowV = nowV->GetNext();
 			}
-			else if (angle < 0) {
-				nowV->SetX(0.99 * (nowV->GetX() - baseX) + baseX);
-				nowV->SetY(0.99 * (nowV->GetY() - baseY) + baseY);
-			}
-			nowV = nowV->GetNext();
+
+			return;
+		}
+		nowS = nowS->GetNextShape();
+		if (nowS == resizeS) {
+			nowS = nowS->GetNextShape();
 		}
 	}
 
+	//形状を内包していないか判定する
+	if (!Wrap(resizeS)) {
+		nowV = resizeS->GetV();
+		while (nowV != NULL) {
+			if (angle > 0) {
+				nowV->SetX(add * (nowV->GetX() - baseX) + baseX);
+				nowV->SetY(add * (nowV->GetY() - baseY) + baseY);
+			}
+			else if (angle < 0) {
+				nowV->SetX(sub * (nowV->GetX() - baseX) + baseX);
+				nowV->SetY(sub * (nowV->GetY() - baseY) + baseY);
+			}
+			nowV = nowV->GetNext();
+		}
+
+		return;
+	}
+
+	//移動させる形状の全ての辺が他交差していないか判定する
+	CVertex* nextV = nowV->GetNext();
+	while (nowV->GetNext() != NULL) {
+		if (!OtherCross(resizeS, nowV, nextV)) {
+			nowV = resizeS->GetV();
+			while (nowV != NULL) {
+				if (angle > 0) {
+					nowV->SetX(add * (nowV->GetX() - baseX) + baseX);
+					nowV->SetY(add * (nowV->GetY() - baseY) + baseY);
+				}
+				else if (angle < 0) {
+					nowV->SetX(sub * (nowV->GetX() - baseX) + baseX);
+					nowV->SetY(sub * (nowV->GetY() - baseY) + baseY);
+				}
+				nowV = nowV->GetNext();
+			}
+
+			return;
+		}
+		nowV = nowV->GetNext();
+		nextV = nextV->GetNext();
+		if (nextV->GetNext() == NULL) {
+			nextV = resizeS->GetV();
+		}
+	}
+	
 	return;
 }
 

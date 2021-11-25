@@ -49,7 +49,7 @@ public:
 	//形状の移動(x, yが形状の重心になる)
 	void MoveShape(CShape* moveS, float x, float y);
 	//辺上に点を追加する
-	void DivideEdge(CVertex* preV);
+	void DivideEdge(CVertex* v1, float x, float y);
 	//基点を返却
 	CVertex* GetBasePoint();
 	//基点の追加

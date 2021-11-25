@@ -261,7 +261,7 @@ void CWinOGLView::OnRButtonDown(UINT nFlags, CPoint point)
 
 	if (AC.editMode) {
 		AC.DeletePoint(NULL);
-		AC.DivideEdge(NULL);
+		AC.DivideEdge(NULL, ClickX, ClickY);
 	}
 
 	RedrawWindow();
