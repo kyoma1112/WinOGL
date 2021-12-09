@@ -22,8 +22,6 @@ public:
 	double AddRotateX = 0, AddRotateY = 0;
 	double scale = 1.0;
 	bool InitView = false;
-
-	void InitViewMode();
 // 操作
 public:
 

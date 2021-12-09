@@ -70,14 +70,6 @@ BOOL CWinOGLView::PreCreateWindow(CREATESTRUCT& cs)
 
 // CWinOGLView 描画
 
-void CWinOGLView::InitViewMode()
-{
-	AC.AllMove(-MoveX, -MoveY);
-	MoveX = 0;
-	MoveY = 0;
-	InitView = true;
-}
-
 void CWinOGLView::OnDraw(CDC* pDC)
 {
 	CWinOGLDoc* pDoc = GetDocument();
@@ -110,6 +102,7 @@ void CWinOGLView::OnDraw(CDC* pDC)
 	//視点の移動
 	if (AC.viewMode) {
 		glLoadIdentity();
+		glTranslatef(MoveX, MoveY, 0);
 		glRotatef(RotateX + AddRotateX, 1.0, 0, 0);
 		glRotatef(RotateY + AddRotateY, 0, 1.0, 0);
 		glScalef(scale, scale, scale);
@@ -118,6 +111,8 @@ void CWinOGLView::OnDraw(CDC* pDC)
 	//視点の初期化
 	if (InitView) {
 		glLoadIdentity();
+		MoveX = 0;
+		MoveY = 0;
 		RotateX = 0;
 		RotateY = 0;
 		scale = 1.0;
@@ -273,7 +268,8 @@ void CWinOGLView::OnMouseMove(UINT nFlags, CPoint point)
 
 	/* 削除モードの処理 */
 	//点の移動
-	if (AC.deleteMode && LDown) {
+	if (AC.deleteMode && LDown)
+	{
 		AC.MovePoint(NULL, NowX, NowY);
 	}
 
@@ -282,8 +278,6 @@ void CWinOGLView::OnMouseMove(UINT nFlags, CPoint point)
 	if (AC.viewMode && LDown) {
 		MoveX = MoveX + NowX - PreX;
 		MoveY = MoveY + NowY - PreY;
-		AC.AllMove(NowX - PreX, NowY - PreY);
-		InitView = true;
 	}
 	//視点の回転
 	if (AC.viewMode && RDown) {
@@ -556,7 +550,7 @@ void CWinOGLView::OnEdit()
 		AC.deleteMode = false;
 		AC.viewMode = false;
 		AC.InitSelect();
-		InitViewMode();
+		InitView = true;
 		AC.editMode = true;
 	}
 
@@ -612,7 +606,7 @@ void CWinOGLView::OnDelete()
 		AC.editMode = false;
 		AC.viewMode = false;
 		AC.InitSelect();
-		InitViewMode();
+		InitView = true;
 		AC.deleteMode = true;
 	}
 
@@ -662,7 +656,7 @@ void CWinOGLView::OnView()
 {
 	// TODO: ここにコマンド ハンドラー コードを追加します。
 	if (AC.viewMode) {
-		InitViewMode();
+		InitView = true;
 		AC.viewMode = false;
 	}
 	else {
