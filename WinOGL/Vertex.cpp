@@ -37,6 +37,12 @@ void CVertex::SetY(float new_y)
 	y = new_y;
 }
 
+//　頂点のZ座標を書き込む
+void CVertex::SetZ(float new_z)
+{
+	z = new_z;
+}
+
 //　頂点のX・Y座標の両方を書き込む
 void CVertex::SetXY(float new_x, float new_y)
 {
@@ -54,6 +60,12 @@ float CVertex::GetX()
 float CVertex::GetY()
 {
 	return y;
+}
+
+//  頂点のZ座標を読み込む
+float CVertex::GetZ()
+{
+	return z;
 }
 
 //　頂点のX・Y座標の両方を読み込む

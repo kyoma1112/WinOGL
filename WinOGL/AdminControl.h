@@ -15,8 +15,16 @@ class CAdminControl
 public:
 	//カーソルを表示するモード
 	bool cursorMode = false;
+	//面を表示するモード
+	bool surfaceMode = false;
+	//xyz軸を表示するモード
+	bool axisMode = false;
 	//編集モード
 	bool editMode = false;
+	//削除モード
+	bool deleteMode = false;
+	//視点変更モード
+	bool viewMode = false;
 
 	CAdminControl();
 	~CAdminControl();
@@ -27,13 +35,21 @@ public:
 	void Draw();
 	//カーソルの表示
 	void DrawCursor(CRect rect, float x, float y);
+	//xyz軸の表示
+	void DrawAxis();
 
 	//新しい形状の追加
 	void AppendShape();
+	//選択されている点を返却
+	CVertex* GetControlPoint();
+	//選択されている形状を返却
+	CShape* GetControlShape();
 	//選択の解除
 	void InitSelect();
 	//点と点の距離の計算
 	float Distance(CVertex* s, float x, float y);
+	//点と点の距離の計算
+	float Distance(float x1, float y1, float x2, float y2);
 	//点と直線の距離の計算
 	float PointLineDistance(CVertex* nowV, CVertex* nextV, float x, float y);
 	//なす角の計算(直線abと直線bcのなす角の計算)
@@ -62,6 +78,14 @@ public:
 	void ResizeShape(CShape* resizeS, float baseX, float baseY, short zDelta);
 	//形状の選択
 	void SelectShape(float x, float y);
+	//辺以外の削除
+	void Delete(float x, float y);
+	//全ての形状の平行移動
+	void AllMove(float MoveX, float MoveY);
+	//全ての形状の回転移動
+	void AllRotate(float baseX, float baseY, float x, float y);
+	//全ての形状の拡大縮小
+	void AllResize(float baseX, float baseY, short zDelta);
 
 	//自交差判定　trueなら交差してない、falseなら交差している
 	boolean Cross(float mx, float my);

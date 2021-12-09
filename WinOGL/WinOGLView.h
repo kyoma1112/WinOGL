@@ -14,8 +14,16 @@ protected: // シリアル化からのみ作成します。
 // 属性
 public:
 	CWinOGLDoc* GetDocument() const;
-	double ClickX, ClickY;
+	double ClickX = 0, ClickY = 0;
 	double NowX = 0, NowY = 0;
+	double PreX = 0, PreY = 0;
+	double MoveX = 0, MoveY = 0;
+	double RotateX = 0, RotateY = 0;
+	double AddRotateX = 0, AddRotateY = 0;
+	double scale = 1.0;
+	bool InitView = false;
+
+	void InitViewMode();
 // 操作
 public:
 
@@ -44,7 +52,8 @@ private:
 	CAdminControl AC;
 	boolean LDown = false;
 	boolean RDown = false;
-	boolean RotateMove = false;
+	boolean NowMove = false;
+	boolean TryToMove = false;
 public:
 	afx_msg void OnLButtonDown(UINT nFlags, CPoint point);
 	afx_msg int OnCreate(LPCREATESTRUCT lpCreateStruct);
@@ -61,6 +70,15 @@ public:
 	afx_msg void OnRButtonDblClk(UINT nFlags, CPoint point);
 	afx_msg void OnRButtonUp(UINT nFlags, CPoint point);
 	afx_msg BOOL OnMouseWheel(UINT nFlags, short zDelta, CPoint pt);
+	afx_msg void OnSurface();
+	afx_msg void OnUpdateSurface(CCmdUI* pCmdUI);
+	afx_msg void OnDelete();
+	afx_msg void OnUpdateDelete(CCmdUI* pCmdUI);
+	afx_msg void OnXyz();
+	afx_msg void OnUpdateXyz(CCmdUI* pCmdUI);
+	afx_msg void OnView();
+	afx_msg void OnUpdateView(CCmdUI* pCmdUI);
+	afx_msg void OnMButtonDown(UINT nFlags, CPoint point);
 };
 
 #ifndef _DEBUG  // WinOGLView.cpp のデバッグ バージョン

@@ -13,6 +13,8 @@ private:
 	float x;
 	//　頂点のY座標
 	float y;
+	//  頂点のZ座標
+	float z = 0;
 	//　次の頂点リストを指すポインタ
 	CVertex* next_vertex;
 public:
@@ -20,12 +22,16 @@ public:
 	void SetX(float new_x);
 	//　頂点のY座標を書き込む
 	void SetY(float new_y);
+	//　頂点のZ座標を書き込む
+	void SetZ(float new_z);
 	//　頂点のX・Y座標の両方を書き込む
 	void SetXY(float new_x, float new_y);
 	//　頂点のX座標を読み込む込む
 	float GetX();
 	//　頂点のY座標を読み込む
 	float GetY();
+	//  頂点のZ座標を読み込む
+	float GetZ();
 	//　頂点のX・Y座標の両方を読み込む
 	void GetXY(float* get_x, float* get_y);
 	//　次の頂点リストを指すポインタを書き込む
