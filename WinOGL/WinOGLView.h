@@ -4,6 +4,7 @@
 #include <gl/GL.h>
 #pragma once
 #include "AdminControl.h"
+#include "pch.h"
 
 class CWinOGLView : public CView
 {
@@ -19,7 +20,6 @@ public:
 	double PreX = 0, PreY = 0;
 	double MoveX = 0, MoveY = 0;
 	double RotateX = 0, RotateY = 0;
-	double AddRotateX = 0, AddRotateY = 0;
 	double scale = 1.0;
 	bool InitView = false;
 // 操作
@@ -77,6 +77,8 @@ public:
 	afx_msg void OnView();
 	afx_msg void OnUpdateView(CCmdUI* pCmdUI);
 	afx_msg void OnMButtonDown(UINT nFlags, CPoint point);
+	afx_msg void OnSolid();
+	afx_msg void OnUpdateSolid(CCmdUI* pCmdUI);
 };
 
 #ifndef _DEBUG  // WinOGLView.cpp のデバッグ バージョン

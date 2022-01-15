@@ -25,12 +25,16 @@ public:
 	bool deleteMode = false;
 	//視点変更モード
 	bool viewMode = false;
+	//立体を表示するモード
+	bool solidMode = false;
 
 	CAdminControl();
 	~CAdminControl();
 
 	//面の表示
 	void DrawArea(CShape* printS);
+	//立体の面表示
+	void DrawSolid(CShape* printS);
 	//面以外の表示
 	void Draw();
 	//カーソルの表示
@@ -86,6 +90,12 @@ public:
 	void AllRotate(float baseX, float baseY, float x, float y);
 	//全ての形状の拡大縮小
 	void AllResize(float baseX, float baseY, short zDelta);
+	//形状の閉じる向きの変更
+	void ReverseShape(CShape* reverseS);
+	//奥行き座標の設定
+	void SetDepth(float new_depth);
+	//奥行き座標の返却
+	float GetDepth();
 
 	//自交差判定　trueなら交差してない、falseなら交差している
 	boolean Cross(float mx, float my);
@@ -117,10 +127,14 @@ public:
 	boolean TriangleInclusion(CShape* nowS, CVertex* v1, CVertex* v2, CVertex* v3);
 	//形状の三角形の部分の中に三角形の三点を除く全ての形状の頂点が存在しているかの判定　trueなら三角形内部に頂点無し、falseなら三角形内部に頂点有り
 	boolean TriangleInclusion(CVertex* v1, CVertex* v2, CVertex* v3);
+	//形状が時計回りに閉じているか判定する 時計周りならtrue、半時計周りならfalse
+	boolean IsClockwise(CShape* checkS);
 	//形状の選択をして良いかの判定する
 	boolean CanSelect();
 	//形状が選択されているかの判定(点、辺、形状が選択されている場合、それぞれ1,2,3を返す。)
 	int NowSelect();
+	//形状が他の形状と何点交差してるかを判定
+	int CountCross(CShape* skipS);
 	
 private:
 	CShape* shape_head = NULL;
@@ -128,5 +142,6 @@ private:
 	CVertex* control_edge = NULL;
 	CShape* control_shape = NULL;
 	CVertex* base_point = NULL;
+	float now_depth = 0.1;
 };
 

@@ -46,6 +46,8 @@ BEGIN_MESSAGE_MAP(CWinOGLView, CView)
 	ON_COMMAND(ID_VIEW, &CWinOGLView::OnView)
 	ON_UPDATE_COMMAND_UI(ID_VIEW, &CWinOGLView::OnUpdateView)
 	ON_WM_MBUTTONDOWN()
+	ON_COMMAND(ID_SOLID, &CWinOGLView::OnSolid)
+	ON_UPDATE_COMMAND_UI(ID_SOLID, &CWinOGLView::OnUpdateSolid)
 END_MESSAGE_MAP()
 
 // CWinOGLView コンストラクション/デストラクション
@@ -83,8 +85,12 @@ void CWinOGLView::OnDraw(CDC* pDC)
 	glClear(GL_COLOR_BUFFER_BIT  | GL_DEPTH_BUFFER_BIT
 	);
 
+	glEnable(GL_DEPTH_TEST);
+	glDepthFunc(GL_LEQUAL);
+
 	//xyz軸の表示
-	if (AC.axisMode) {
+	if (AC.axisMode) 
+	{
 		AC.DrawAxis();
 	}
 
@@ -92,24 +98,29 @@ void CWinOGLView::OnDraw(CDC* pDC)
 	AC.Draw();
 
 	//十字カーソルの表示
-	if (AC.cursorMode && !AC.viewMode) {
+	if (AC.cursorMode && !AC.viewMode) 
+	{
 		CRect rect;
 		GetClientRect(rect); // 描画領域の大きさを取得
 
 		AC.DrawCursor(rect, NowX, NowY);
 	}
 
+	glDisable(GL_DEPTH_TEST);
+
 	//視点の移動
-	if (AC.viewMode) {
+	if (AC.viewMode) 
+	{
 		glLoadIdentity();
 		glTranslatef(MoveX, MoveY, 0);
-		glRotatef(RotateX + AddRotateX, 1.0, 0, 0);
-		glRotatef(RotateY + AddRotateY, 0, 1.0, 0);
+		glRotatef(RotateX, 1.0, 0, 0);
+		glRotatef(RotateY, 0, 1.0, 0);
 		glScalef(scale, scale, scale);
 	}
 
 	//視点の初期化
-	if (InitView) {
+	if (InitView) 
+	{
 		glLoadIdentity();
 		MoveX = 0;
 		MoveY = 0;
@@ -119,6 +130,7 @@ void CWinOGLView::OnDraw(CDC* pDC)
 		InvalidateRect(0, false);
 		InitView = false;
 	}
+
 	glFlush();
 	SwapBuffers(pDC->m_hDC);
 	wglMakeCurrent(pDC->m_hDC, NULL);
@@ -164,7 +176,9 @@ void CWinOGLView::OnLButtonDown(UINT nFlags, CPoint point)
 	ClickY = ClickY * 2 - 1; //Yワールド座標系
 	double hi;
 	
-	if (rect.Width() > rect.Height()) {     //画面サイズに合わせてX,Yを調整
+	//画面サイズに合わせてX,Yを調整
+	if (rect.Width() > rect.Height()) 
+	{     
 		hi = (double)rect.Width() / rect.Height();
 		ClickX = ClickX * hi;
 	}
@@ -174,12 +188,15 @@ void CWinOGLView::OnLButtonDown(UINT nFlags, CPoint point)
 	}
 
 	//全てのモードに入っていない時に点を追加する
-	if(!AC.editMode && !AC.deleteMode && !AC.viewMode){
+	if(!AC.editMode && !AC.deleteMode && !AC.viewMode)
+	{
 		AC.CreateShape(ClickX, ClickY);
 	}
 
 	//点・形状を動かしてよいかを判定する
-	if (!AC.Inclusion(NULL, ClickX, ClickY) || (AC.GetControlPoint() != NULL && AC.Distance(AC.GetControlPoint(), ClickX, ClickY) < select_dist * 2)) {
+	if (!AC.Inclusion(NULL, ClickX, ClickY) || 
+		(AC.GetControlPoint() != NULL && AC.Distance(AC.GetControlPoint(), ClickX, ClickY) < select_dist * 2)) 
+	{
 		NowMove = true;
 	}
 
@@ -203,18 +220,21 @@ void CWinOGLView::OnLButtonUp(UINT nFlags, CPoint point)
 	ClickY = ClickY * 2 - 1; //Yワールド座標系
 	double hi;
 
-	if (rect.Width() > rect.Height()) {     //画面サイズに合わせてX,Yを調整
+	if (rect.Width() > rect.Height()) 
+	{     //画面サイズに合わせてX,Yを調整
 		hi = (double)rect.Width() / rect.Height();
 		ClickX = ClickX * hi;
 	}
-	else {
+	else 
+	{
 		hi = (double)rect.Height() / rect.Width();
 		ClickY = ClickY * hi;
 	}
 
 	/* 編集モードまたは削除モードの処理 */
 	//左のドラッグをしていなければ選択
-	if ((AC.editMode || AC.deleteMode) && !TryToMove) {
+	if ((AC.editMode || AC.deleteMode) && !TryToMove) 
+	{
 		AC.SelectShape(ClickX, ClickY);
 	}
 	TryToMove = false;
@@ -227,7 +247,8 @@ void CWinOGLView::OnMouseMove(UINT nFlags, CPoint point)
 {
 	// TODO: ここにメッセージ ハンドラー コードを追加するか、既定の処理を呼び出します。
 
-	if (AC.cursorMode || AC.editMode || AC.deleteMode || AC.viewMode) {
+	if (AC.cursorMode || AC.editMode || AC.deleteMode || AC.viewMode) 
+	{
 		CRect rect;
 		GetClientRect(rect); // 描画領域の大きさを取得
 
@@ -238,11 +259,14 @@ void CWinOGLView::OnMouseMove(UINT nFlags, CPoint point)
 		NowY = NowY * 2 - 1; //Yワールド座標系
 		double hi;
 
-		if (rect.Width() > rect.Height()) {     //画面サイズに合わせてX,Yを調整
+		//画面サイズに合わせてX,Yを調整
+		if (rect.Width() > rect.Height()) 
+		{
 			hi = (double)rect.Width() / rect.Height();
 			NowX = NowX * hi;
 		}
-		else {
+		else
+		{
 			hi = (double)rect.Height() / rect.Width();
 			NowY = NowY * hi;
 		}
@@ -250,18 +274,23 @@ void CWinOGLView::OnMouseMove(UINT nFlags, CPoint point)
 
 	/* 編集モードの処理 */
 	//点・形状の移動
-	if (AC.editMode && LDown) {
-		if (NowMove) {
+	if (AC.editMode && LDown) 
+	{
+		if (NowMove) 
+		{
 			AC.MovePoint(NULL, NowX, NowY);
 			AC.MoveShape(NULL, NowX, NowY);
 		}
-		if (AC.Distance(ClickX, ClickY, NowX, NowY) >= 0.1) {
+		if (AC.Distance(ClickX, ClickY, NowX, NowY) >= 0.1) 
+		{
 			TryToMove = true;
 		}
 	}
 	//形状の回転
-	if (AC.editMode && RDown) {
-		if (AC.GetBasePoint() != NULL) {
+	if (AC.editMode && RDown) 
+	{
+		if (AC.GetBasePoint() != NULL) 
+		{
 			AC.RotateShape(NULL, AC.GetBasePoint()->GetX(), AC.GetBasePoint()->GetY(), NowX, NowY);
 		}
 	}
@@ -270,19 +299,28 @@ void CWinOGLView::OnMouseMove(UINT nFlags, CPoint point)
 	//点の移動
 	if (AC.deleteMode && LDown)
 	{
-		AC.MovePoint(NULL, NowX, NowY);
+		if (NowMove) 
+		{
+			AC.MovePoint(NULL, NowX, NowY);
+		}
+		if (AC.Distance(ClickX, ClickY, NowX, NowY) >= 0.1) 
+		{
+			TryToMove = true;
+		}
 	}
 
 	/* 視点変更モードの処理 */
 	//視点の平行移動
-	if (AC.viewMode && LDown) {
+	if (AC.viewMode && LDown) 
+	{
 		MoveX = MoveX + NowX - PreX;
 		MoveY = MoveY + NowY - PreY;
 	}
 	//視点の回転
-	if (AC.viewMode && RDown) {
-		AddRotateX = (NowY - ClickY) * 180;
-		AddRotateY = (NowX - ClickX) * 180;
+	if (AC.viewMode && RDown) 
+	{
+		RotateX = RotateX + (NowY - PreY) * -180;
+		RotateY = RotateY + (NowX - PreX) * 180;
 	}
 
 	PreX = NowX;
@@ -296,22 +334,59 @@ BOOL CWinOGLView::OnMouseWheel(UINT nFlags, short zDelta, CPoint pt)
 	// TODO: ここにメッセージ ハンドラー コードを追加するか、既定の処理を呼び出します。
 
 	/* 編集モードの処理 */
-	if (AC.editMode) {
+	if (AC.editMode) 
+	{
 		//基点が存在している場合,図形の拡大縮小
-		if (AC.GetBasePoint() != NULL) {
+		if (AC.GetBasePoint() != NULL) 
+		{
 			AC.ResizeShape(NULL, AC.GetBasePoint()->GetX(), AC.GetBasePoint()->GetY(), zDelta);
 		}
 	}
 
 	/*始点変更モードの処理*/
 	//視点の拡大縮小
-	if (AC.viewMode) {
+	if (AC.viewMode) 
+	{
 		int angle = (int)zDelta / 15;
-		if(angle > 0) {
-			scale *= pow(1.005, abs(angle));
+		if (AC.solidMode && RDown) 
+		{
+			if (angle > 0)
+			{
+				for (int i = 0; i < angle; i++) {
+					if (AC.GetDepth() + 0.0025 < 0.9)
+					{
+						AC.SetDepth(AC.GetDepth() + 0.0025);
+					}
+					else
+					{
+						break;
+					}
+				}
+			}
+			else if (angle < 0)
+			{
+				for (int i = 0; i > angle; i--) {
+					if (AC.GetDepth() - 0.0025 > 0.01)
+					{
+						AC.SetDepth(AC.GetDepth() - 0.0025);
+					}
+					else
+					{
+						break;
+					}
+				}
+			}
 		}
-		else if (angle < 0) {
-			scale *= pow(0.995, abs(angle));
+		else 
+		{
+			if (angle > 0)
+			{
+				scale *= pow(1.005, abs(angle));
+			}
+			else if (angle < 0)
+			{
+				scale *= pow(0.995, abs(angle));
+			}
 		}
 	}
 	
@@ -332,18 +407,22 @@ void CWinOGLView::OnMButtonDown(UINT nFlags, CPoint point)
 	ClickY = ClickY * 2 - 1; //Yワールド座標系
 	double hi;
 
-	if (rect.Width() > rect.Height()) {     //画面サイズに合わせてX,Yを調整
+	//画面サイズに合わせてX,Yを調整
+	if (rect.Width() > rect.Height()) 
+	{
 		hi = (double)rect.Width() / rect.Height();
 		ClickX = ClickX * hi;
 	}
-	else {
+	else 
+	{
 		hi = (double)rect.Height() / rect.Width();
 		ClickY = ClickY * hi;
 	}
 
 	/*編集モードの処理*/
 	//形状が選択されている状態のとき,基点の追加(位置変更)
-	if (AC.editMode && AC.NowSelect() == 3) {
+	if (AC.editMode && AC.NowSelect() == 3) 
+	{
 		AC.AddBasePoint(ClickX, ClickY);
 	}
 
@@ -366,25 +445,30 @@ void CWinOGLView::OnRButtonDown(UINT nFlags, CPoint point)
 	ClickY = ClickY * 2 - 1; //Yワールド座標系
 	double hi;
 
-	if (rect.Width() > rect.Height()) {     //画面サイズに合わせてX,Yを調整
+	//画面サイズに合わせてX,Yを調整
+	if (rect.Width() > rect.Height()) 
+	{     
 		hi = (double)rect.Width() / rect.Height();
 		ClickX = ClickX * hi;
 	}
-	else {
+	else 
+	{
 		hi = (double)rect.Height() / rect.Width();
 		ClickY = ClickY * hi;
 	}
 
 	/* 編集モードの処理 */
 	//点の削除,辺上に点を追加
-	if (AC.editMode) {
+	if (AC.editMode) 
+	{
 		AC.DeletePoint(NULL);
 		AC.DivideEdge(NULL, ClickX, ClickY);
 	}
 
 	/*削除モードの処理*/
 	//辺以外の全ての削除
-	if (AC.deleteMode) {
+	if (AC.deleteMode) 
+	{
 		AC.Delete(ClickX, ClickY);
 	}
 
@@ -396,35 +480,6 @@ void CWinOGLView::OnRButtonUp(UINT nFlags, CPoint point)
 {
 	// TODO: ここにメッセージ ハンドラー コードを追加するか、既定の処理を呼び出します。
 	RDown = false;
-
-	CRect rect;
-	GetClientRect(rect); // 描画領域の大きさを取得
-
-	ClickX = (double)point.x / rect.Width(); //X正規化座標系
-	ClickY = (double)point.y / rect.Height();
-	ClickY = (ClickY - 1) * -1; //Y正規化座標系
-	ClickX = ClickX * 2 - 1; //Xワールド座標系
-	ClickY = ClickY * 2 - 1; //Yワールド座標系
-	double hi;
-
-	if (rect.Width() > rect.Height()) {     //画面サイズに合わせてX,Yを調整
-		hi = (double)rect.Width() / rect.Height();
-		ClickX = ClickX * hi;
-	}
-	else {
-		hi = (double)rect.Height() / rect.Width();
-		ClickY = ClickY * hi;
-	}
-
-	/* 視点変更モードの処理 */
-	//視点の回転
-	if (AC.viewMode) {
-		RotateX = RotateX + AddRotateX;
-		RotateY = RotateY + AddRotateY;
-
-		AddRotateX = 0;
-		AddRotateY = 0;
-	}
 
 	RedrawWindow();
 	CView::OnRButtonUp(nFlags, point);
@@ -500,11 +555,13 @@ void CWinOGLView::OnSize(UINT nType, int cx, int cy)
 	glMatrixMode(GL_PROJECTION);
 	glLoadIdentity();
 	double hi;
-	if (cx > cy) {
+	if (cx > cy) 
+	{
 		hi = (double)cx / cy;
 		glOrtho(-1 * hi, 1 * hi, -1, 1 , -100, 100); // 問 5.2 で考える内容
 	}
-	else {
+	else 
+	{
 		hi = (double)cy / cx;
 		glOrtho(-1, 1, -1 * hi, 1 * hi , -100, 100); // 問 5.2 で考える内容
 	}
@@ -517,10 +574,12 @@ void CWinOGLView::OnSize(UINT nType, int cx, int cy)
 void CWinOGLView::OnCursor()
 {
 	// TODO: ここにコマンド ハンドラー コードを追加します。
-	if (AC.cursorMode) {
+	if (AC.cursorMode) 
+	{
 		AC.cursorMode = false;
 	}
-	else {
+	else 
+	{
 		AC.cursorMode = true;
 	}
 
@@ -530,10 +589,12 @@ void CWinOGLView::OnCursor()
 void CWinOGLView::OnUpdateCursor(CCmdUI* pCmdUI)
 {
 	// TODO:ここにコマンド更新 UI ハンドラー コードを追加します。
-	if (AC.cursorMode) {
+	if (AC.cursorMode)
+	{
 		pCmdUI->SetCheck(true);
 	}
-	else {
+	else 
+	{
 		pCmdUI->SetCheck(false);
 	}
 }
@@ -542,15 +603,18 @@ void CWinOGLView::OnUpdateCursor(CCmdUI* pCmdUI)
 void CWinOGLView::OnEdit()
 {
 	// TODO: ここにコマンド ハンドラー コードを追加します。
-	if (AC.editMode) {
+	if (AC.editMode) 
+	{
 		AC.InitSelect();
 		AC.editMode = false;
 	}
-	else if(AC.CanSelect()){
+	else if(AC.CanSelect())
+	{
 		AC.deleteMode = false;
 		AC.viewMode = false;
 		AC.InitSelect();
 		InitView = true;
+		AC.solidMode = false;
 		AC.editMode = true;
 	}
 
@@ -560,10 +624,12 @@ void CWinOGLView::OnEdit()
 void CWinOGLView::OnUpdateEdit(CCmdUI* pCmdUI)
 {
 	// TODO:ここにコマンド更新 UI ハンドラー コードを追加します。
-	if (AC.editMode) {
+	if (AC.editMode) 
+	{
 		pCmdUI->SetCheck(true);
 	}
-	else {
+	else 
+	{
 		pCmdUI->SetCheck(false);
 	}
 }
@@ -572,10 +638,13 @@ void CWinOGLView::OnUpdateEdit(CCmdUI* pCmdUI)
 void CWinOGLView::OnSurface()
 {
 	// TODO: ここにコマンド ハンドラー コードを追加します。
-	if (AC.surfaceMode) {
+	if (AC.surfaceMode) 
+	{
 		AC.surfaceMode = false;
 	}
-	else {
+	else 
+	{
+		AC.solidMode = false;
 		AC.surfaceMode = true;
 	}
 
@@ -586,10 +655,12 @@ void CWinOGLView::OnSurface()
 void CWinOGLView::OnUpdateSurface(CCmdUI* pCmdUI)
 {
 	// TODO:ここにコマンド更新 UI ハンドラー コードを追加します。
-	if (AC.surfaceMode) {
+	if (AC.surfaceMode) 
+	{
 		pCmdUI->SetCheck(true);
 	}
-	else {
+	else 
+	{
 		pCmdUI->SetCheck(false);
 	}
 }
@@ -598,15 +669,18 @@ void CWinOGLView::OnUpdateSurface(CCmdUI* pCmdUI)
 void CWinOGLView::OnDelete()
 {
 	// TODO: ここにコマンド ハンドラー コードを追加します。
-	if (AC.deleteMode) {
+	if (AC.deleteMode) 
+	{
 		AC.InitSelect();
 		AC.deleteMode = false;
 	}
-	else if(AC.CanSelect()){
+	else if(AC.CanSelect())
+	{
 		AC.editMode = false;
 		AC.viewMode = false;
 		AC.InitSelect();
 		InitView = true;
+		AC.solidMode = false;
 		AC.deleteMode = true;
 	}
 
@@ -617,10 +691,12 @@ void CWinOGLView::OnDelete()
 void CWinOGLView::OnUpdateDelete(CCmdUI* pCmdUI)
 {
 	// TODO:ここにコマンド更新 UI ハンドラー コードを追加します。
-	if (AC.deleteMode) {
+	if (AC.deleteMode) 
+	{
 		pCmdUI->SetCheck(true);
 	}
-	else {
+	else 
+	{
 		pCmdUI->SetCheck(false);
 	}
 }
@@ -629,10 +705,12 @@ void CWinOGLView::OnUpdateDelete(CCmdUI* pCmdUI)
 void CWinOGLView::OnXyz()
 {
 	// TODO: ここにコマンド ハンドラー コードを追加します。
-	if (AC.axisMode) {
+	if (AC.axisMode)
+	{
 		AC.axisMode = false;
 	}
-	else {
+	else 
+	{
 		AC.axisMode = true;
 	}
 
@@ -643,10 +721,12 @@ void CWinOGLView::OnXyz()
 void CWinOGLView::OnUpdateXyz(CCmdUI* pCmdUI)
 {
 	// TODO:ここにコマンド更新 UI ハンドラー コードを追加します。
-	if (AC.axisMode) {
+	if (AC.axisMode) 
+	{
 		pCmdUI->SetCheck(true);
 	}
-	else {
+	else 
+	{
 		pCmdUI->SetCheck(false);
 	}
 }
@@ -655,11 +735,14 @@ void CWinOGLView::OnUpdateXyz(CCmdUI* pCmdUI)
 void CWinOGLView::OnView()
 {
 	// TODO: ここにコマンド ハンドラー コードを追加します。
-	if (AC.viewMode) {
+	if (AC.viewMode)
+	{
 		InitView = true;
 		AC.viewMode = false;
+		AC.solidMode = false;
 	}
-	else {
+	else 
+	{
 		AC.deleteMode = false;
 		AC.editMode = false;
 		AC.InitSelect();
@@ -673,13 +756,42 @@ void CWinOGLView::OnView()
 void CWinOGLView::OnUpdateView(CCmdUI* pCmdUI)
 {
 	// TODO:ここにコマンド更新 UI ハンドラー コードを追加します。
-	if (AC.viewMode) {
+	if (AC.viewMode)
+	{
 		pCmdUI->SetCheck(true);
 	}
-	else {
+	else
+	{
 		pCmdUI->SetCheck(false);
 	}
 }
 
+void CWinOGLView::OnSolid()
+{
+	// TODO: ここにコマンド ハンドラー コードを追加します。
+	if (AC.solidMode)
+	{
+		AC.solidMode = false;
+	}
+	else if (AC.viewMode && !AC.solidMode) 
+	{
+		AC.solidMode = true;
+		AC.surfaceMode = false;
+	}
+
+	RedrawWindow();
+}
 
 
+void CWinOGLView::OnUpdateSolid(CCmdUI* pCmdUI)
+{
+	// TODO:ここにコマンド更新 UI ハンドラー コードを追加します。
+	if (AC.solidMode)
+	{
+		pCmdUI->SetCheck(true);
+	}
+	else
+	{
+		pCmdUI->SetCheck(false);
+	}
+}
